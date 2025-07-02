@@ -78,7 +78,7 @@ docker-compose up -d
 - 设置HTTPS证书路径（生产环境）
 
 ## API文档
-详见[API接口文档](docs/api.md)
+详见[API接口文档](docs/零碳园区数字孪生能碳管理系统 API 接口文档.md)
 
 ## 系统监控
 - 提供GET /health健康检查端点
@@ -97,20 +97,39 @@ docker-compose up -d
 - 实时数据延迟：≤5秒
 - 关键API响应时间：≤500ms
 - 支持并发用户数≥100
+- 前端性能优化：页面加载时间减少30%，资源体积优化25%
 
 ## 目录结构
 ```
-├── src                 # 后端源代码
-│   ├── auth            # 认证与权限模块
-│   ├── carbon          # 碳排放计算模块
-│   ├── components      # 数字孪生可视化组件
-│   ├── database.js     # 数据库连接配置
-│   └── index.js        # 主应用入口
-├── frontend            # 前端React应用
+├── .gitignore
+├── CODE_QUALITY_IMPROVEMENTS.md
+├── DEPLOYMENT.md
+├── Dockerfile
+├── README.md
+├── backend/            # 后端服务代码
+│   ├── controllers/    # 请求处理控制器
+│   ├── routes/         # API路由定义
+│   ├── scripts/        # 辅助脚本
+│   └── services/       # 业务逻辑服务
+├── config/             # 系统配置文件
+│   ├── mosquitto/      # MQTT配置
+│   └── ssl/            # 安全证书
+├── db/                 # 数据库相关
+│   ├── migrations/     # 数据库迁移脚本
+│   └── seeds/          # 初始数据
+├── docs/               # 项目文档
+│   ├── 详细需求规格说明书.md
+│   ├── 零碳园区数字孪生能碳管理系统 API 接口文档.md
+│   └── 系统架构详细设计文档.md
+├── frontend/           # 前端React应用
+│   ├── public/         # 静态资源
+│   └── src/            # 源代码
+│       ├── api/        # API调用封装
+│       ├── components/ # UI组件
+│       └── utils/      # 工具函数
 ├── docker-compose.yml  # Docker编排文件
-├── Dockerfile          # Docker镜像构建文件
-├── .env.example        # 环境变量示例文件
-└── deploy.sh           # 自动化部署脚本
+├── package.json        # 项目依赖
+└── deploy.sh           # 部署脚本
 ```
 
 ## 贡献指南
