@@ -1,0 +1,53 @@
+version: '3.8'
+services:
+  energy-system:
+    build: .
+    image: zero-carbon-energy-system:latest
+    container_name: energy-system
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=your_strong_secret_key_here
+      - PORT=80
+      - HTTPS_PORT=443
+      - MQTT_BROKER=mqtt-broker:1883
+      - DATABASE_URL=/app/data/energy.db
+      - LOG_LEVEL=info
+      - ENABLE_CORS=false
+      - MAX_REQUEST_SIZE=10mb
+      - RATE_LIMIT_WINDOW=15
+      - RATE_LIMIT_MAX=100
+      - SSL_CERT_PATH=/etc/ssl/certs/ssl.crt
+      - SSL_KEY_PATH=/etc/ssl/private/ssl.key
+      - TLS_VERSION=TLSv1.3
+      - SESSION_TIMEOUT=24h
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config/ssl:/etc/ssl
+    networks:
+      - energy-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./config/mosquitto:/mosquitto/config
+    networks:
+      - energy-network
+    restart: unless-stopped
+
+networks:
+  energy-network:
+    driver: bridge
