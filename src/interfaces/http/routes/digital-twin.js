@@ -1,6 +1,6 @@
 import express from 'express';
 import DigitalTwinController from '../controllers/DigitalTwinController.js';
-import { requireRole } from '../middleware/auth.js';
+import { requireRole } from '../middleware/roleCheck.js';
 
 const router = express.Router();
 

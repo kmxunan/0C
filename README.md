@@ -2,20 +2,29 @@
 
 [![Build Status](https://img.shields.io/badge/build-passing-green)](https://github.com/kmxunan/0C)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-v1.0-blue)](https://github.com/kmxunan/0C/releases)
+[![Version](https://img.shields.io/badge/version-v2.0-blue)](https://github.com/kmxunan/0C/releases)
 [![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)](https://github.com/kmxunan/0C)
 [![Digital Twin](https://img.shields.io/badge/digital%20twin-99.8%25-success)](https://github.com/kmxunan/0C)
 
-## 🌟 项目简介
+## 🌟 项目概述
 
-零碳园区数字孪生能碳管理系统是一个集成了**沉浸式3D数字孪生**、**AI智能预测**、**实时数据可视化**的现代化园区管理平台。通过先进的数字化手段实现园区能源与碳排放的精细化管理，为园区管理者、能源运营方和政府监管机构提供数据驱动的智能化解决方案。
+零碳园区数字孪生能碳管理系统是一个集成了**沉浸式3D数字孪生**、**AI智能预测**、**虚拟电厂(VPP)交易**、**区块链技术**的现代化智慧园区管理平台。系统通过先进的数字化手段实现园区能源与碳排放的精细化管理，为园区管理者、能源运营方和政府监管机构提供数据驱动的智能化解决方案。
 
 ### 🎯 核心价值
 
-- **🔮 数字孪生技术**：真实还原园区3D场景，提供沉浸式管理体验
-- **🤖 AI智能预测**：基于TensorFlow.js的本地化能源预测和优化
-- **📊 实时数据驱动**：毫秒级数据更新，支持实时决策
-- **🌱 零碳目标导向**：精准碳排放计算和减排路径规划
+- **🔮 数字孪生技术**：基于Three.js的高性能3D渲染引擎，真实还原园区场景，提供沉浸式管理体验
+- **🤖 AI智能预测**：集成TensorFlow.js本地化AI模型，提供能源预测、需求预测和风险评估
+- **⚡ 虚拟电厂运营**：完整的VPP资源聚合、交易策略、市场连接和结算分析系统
+- **🔗 区块链集成**：支持去中心化能源交易、碳信用交易和绿色能源证书管理
+- **📊 实时数据驱动**：毫秒级数据更新，WebSocket实时通信，支持实时决策
+- **🌱 零碳目标导向**：精准碳排放计算和减排路径规划，助力碳中和目标实现
+
+### 🏆 项目特色
+
+- **技术先进性**：采用微服务架构 + 前后端分离 + 消息队列模式
+- **功能完整性**：涵盖能源管理、设备监控、交易执行、数据分析等全业务流程
+- **扩展性强**：模块化设计，支持多阶段功能扩展和定制化开发
+- **性能优异**：高并发处理能力，支持大规模园区和设备接入
 
 ## 🚀 核心功能
 
@@ -91,41 +100,81 @@
 
 #### 前端技术栈
 
-- **核心框架**: React v18+ (Hooks + 函数式组件)
-- **3D渲染**: Three.js + @react-three/fiber + @react-three/drei
-- **状态管理**: Zustand (轻量级状态管理)
-- **UI组件**: Material-UI v5 + 自定义组件库
-- **路由**: React Router v6
-- **数据可视化**: Recharts + 自定义3D图表 + Chart3D组件
-- **PWA支持**: Service Worker + 离线缓存
-- **实时通信**: WebSocket + Socket.io + WebSocketManager
-- **AR/VR**: WebXR API + Three.js XR + 控制器支持
-- **交互系统**: 手势识别 + 语音API + 快捷键系统
+- **核心框架**: React v19.1.0 + TypeScript
+- **构建工具**: React Scripts v5.0.1 + Webpack
+- **3D渲染引擎**: Three.js v0.168.0 + @react-three/fiber + @react-three/drei
+- **物理引擎**: @react-three/cannon + @react-three/rapier
+- **状态管理**: Zustand v5.0.6 (轻量级状态管理)
+- **UI组件库**: 
+  - Material-UI v5.14.20 + Ant Design v5.26.3
+  - 自定义组件库 + 响应式设计系统
+- **路由管理**: React Router DOM v7.6.2
+- **数据可视化**: 
+  - Recharts v2.8.0 + Chart.js v4.5.0
+  - 自定义3D图表组件 + ECharts集成
+- **开发调试**: Leva v0.10.0 (3D场景调试)
+- **PWA支持**: Service Worker + 离线缓存策略
+- **实时通信**: WebSocket + 自定义WebSocketManager
+- **AR/VR预备**: WebXR API + Three.js XR支持
+- **交互系统**: HammerJS v2.0.8 + 手势识别 + 语音API
 
 #### 后端技术栈
 
-- **运行时**: Node.js v16.x + Express.js
-- **数据库**: SQLite (轻量级存储) + MongoDB (时序数据)
-- **ORM**: Knex.js (SQL查询构建器)
-- **消息中间件**: MQTT (Mosquitto)
-- **AI框架**: TensorFlow.js (本地化AI推理)
-- **缓存**: Redis (高性能缓存)
+- **运行时环境**: Node.js v18+ + Express.js v4.18.2
+- **编程语言**: JavaScript ES6+ (模块化)
+- **数据库系统**: 
+  - MySQL v8.0 (主数据库) + Redis v5.5.6 (缓存)
+  - SQLite v5.1.1 (本地存储) + MongoDB (时序数据)
+- **ORM/查询构建**: Knex.js + MySQL2 v3.14.1
+- **消息中间件**: MQTT v5.13.1 (Mosquitto Broker)
+- **AI/ML框架**: TensorFlow.js v4.22.0 (本地化AI推理)
+- **区块链集成**: 
+  - Ethers.js v5.7.2 + Web3.js v4.0.3
+  - Hardhat v2.17.0 (智能合约开发)
+  - OpenZeppelin v4.9.2 (安全合约库)
+- **安全认证**: JWT + bcrypt v5.1.1 + Helmet v8.1.0
+- **文件存储**: IPFS HTTP Client v60.0.1
+- **监控日志**: Winston v3.17.0 + Prometheus Client v15.1.3
+- **工具库**: 
+  - Joi v17.13.3 (数据验证)
+  - UUID v11.1.0 + Date-fns v4.1.0
+  - Node-cache v5.1.2 + Express-rate-limit v7.5.1
 
-#### 数据库设计
+#### 数据库架构
 
-- **核心表**: 15张主要业务表
-- **VPP模块**: 20张专业表（P0阶段完成）+ 9张P1阶段表（已就绪）
-- **总计**: 29张数据库表，完整的两阶段架构
-- **索引优化**: 全面的查询性能优化
-- **数据完整性**: 完整的外键约束和事务支持
+- **核心业务表**: 15张主要业务表
+- **VPP模块**: 
+  - P0阶段: 7张基础表（资源管理、VPP管理、交易记录）
+  - P1阶段: 9张扩展表（智能决策、高级分析）
+  - P2阶段: 10张高级表（强化学习、多目标优化）
+- **区块链模块**: 智能合约存储 + 交易记录表
+- **总计**: 41张数据库表，完整的三阶段架构
+- **性能优化**: 
+  - 全面的索引策略和查询优化
+  - 分区表设计和读写分离
+  - 缓存策略和连接池管理
+- **数据完整性**: 完整的外键约束、事务支持和数据验证
 
 #### DevOps & 质量保证
 
-- **代码质量**: ESLint + Prettier + Husky
-- **测试框架**: Jest + React Testing Library
-- **部署**: Docker + Docker Compose
-- **安全**: JWT认证 + RBAC权限控制
-- **监控**: 性能监控 + 健康检查
+- **代码质量**: 
+  - ESLint v8.57.0 + Prettier v3.3.3 + Husky
+  - 多套ESLint配置（基础、增强、渐进式、质量）
+- **测试框架**: 
+  - Jest v29.6.4 + React Testing Library
+  - 单元测试 + 集成测试 + E2E测试
+  - 区块链测试: Hardhat + Chai + Waffle
+- **构建部署**: 
+  - Docker + Docker Compose
+  - Kubernetes配置 + CI/CD流水线
+- **安全保障**: 
+  - JWT认证 + RBAC权限控制
+  - 安全审计 + 漏洞扫描
+  - 数据加密 + API限流
+- **监控运维**: 
+  - Prometheus + Grafana监控
+  - 性能基准测试 + 健康检查
+  - 日志聚合 + 错误追踪
 
 ## 系统要求
 
@@ -195,9 +244,112 @@ curl http://localhost:1125/health
 - **API文档**: http://localhost:1125/api-docs
 - **健康检查**: http://localhost:1125/health
 
+## 📁 项目结构
+
+```
+零碳园区数字孪生系统/
+├── frontend/                    # 前端应用
+│   ├── src/
+│   │   ├── components/         # React组件
+│   │   │   ├── digital-twin/   # 数字孪生3D组件
+│   │   │   ├── dashboard/      # 仪表板组件
+│   │   │   ├── device-types/   # 设备管理组件
+│   │   │   └── common/         # 通用组件
+│   │   ├── pages/              # 页面组件
+│   │   ├── services/           # API服务
+│   │   ├── stores/             # 状态管理
+│   │   ├── styles/             # 样式文件
+│   │   └── utils/              # 工具函数
+│   ├── public/                 # 静态资源
+│   └── package.json            # 前端依赖配置
+├── backend/                     # 后端服务
+│   ├── controllers/            # 控制器层
+│   ├── services/               # 业务逻辑层
+│   │   ├── VPP*.js            # 虚拟电厂服务
+│   │   ├── *Service.js        # 各业务服务
+│   │   └── AI*.js             # AI/ML服务
+│   ├── routes/                 # 路由配置
+│   ├── database/               # 数据库相关
+│   │   ├── migrations/         # 数据库迁移
+│   │   └── vppDatabase.js      # 数据库管理
+│   ├── config/                 # 配置文件
+│   └── scripts/                # 脚本工具
+├── src/                        # 共享源码
+│   ├── core/                   # 核心业务逻辑
+│   │   ├── services/           # 核心服务
+│   │   └── architecture/       # 架构组件
+│   ├── interfaces/             # 接口层
+│   │   └── http/               # HTTP接口
+│   │       ├── controllers/    # API控制器
+│   │       ├── routes/         # 路由定义
+│   │       └── middleware/     # 中间件
+│   ├── shared/                 # 共享模块
+│   │   ├── utils/              # 工具函数
+│   │   ├── types/              # 类型定义
+│   │   └── constants/          # 常量定义
+│   └── contracts/              # 智能合约
+├── docs/                       # 项目文档
+│   ├── 1_系统架构设计.md        # 系统架构文档
+│   ├── 2_数据库设计.md          # 数据库设计文档
+│   ├── 3_API接口文档.md         # API接口文档
+│   └── 4_开发者指南.md          # 开发者指南
+├── config/                     # 配置文件
+│   ├── nginx/                  # Nginx配置
+│   ├── prometheus/             # 监控配置
+│   └── mosquitto/              # MQTT配置
+├── scripts/                    # 构建和部署脚本
+├── tests/                      # 测试文件
+├── k8s/                        # Kubernetes配置
+├── docker-compose.yml          # Docker编排
+├── package.json                # 项目依赖
+├── hardhat.config.js           # 区块链配置
+└── README.md                   # 项目说明
+```
+
 ## 环境配置
 
-- 复制.env.example为.env并修改配置
+### 环境变量配置
+
+```bash
+# 复制环境变量模板
+cp .env.example .env
+
+# 编辑环境变量
+vim .env
+```
+
+### 主要配置项
+
+```bash
+# 数据库配置
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=zero_carbon_park
+
+# Redis配置
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# JWT配置
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=24h
+
+# MQTT配置
+MQTT_BROKER_URL=mqtt://localhost:1883
+MQTT_USERNAME=
+MQTT_PASSWORD=
+
+# 区块链配置
+ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/your_key
+PRIVATE_KEY=your_private_key
+
+# API配置
+API_PORT=1125
+FRONTEND_PORT=7240
+```
 - 生产环境请使用.env.prod文件
 - 配置MQTT Broker安全设置
 - 设置HTTPS证书路径（生产环境）

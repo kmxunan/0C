@@ -1,7 +1,7 @@
 import express from 'express';
 import { body, query } from 'express-validator';
 import MaintenanceController from '../controllers/MaintenanceController.js';
-import { requireRole } from '../middleware/auth.js';
+import { requireRole } from '../middleware/roleCheck.js';
 import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();

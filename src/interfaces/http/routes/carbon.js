@@ -1,7 +1,7 @@
 import express from 'express';
 import { body, query } from 'express-validator';
 import CarbonController from '../controllers/CarbonController.js';
-import authMiddleware from '../middleware/auth.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 import { requireRole } from '../middleware/roleCheck.js';
 
 const router = express.Router();

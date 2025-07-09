@@ -15,7 +15,10 @@ import energyRoutes from './routes/energy.js';
 import carbonRoutes from './routes/carbon.js';
 import maintenanceRoutes from './routes/maintenance.js';
 import digitalTwinRoutes from './routes/digital-twin.js';
-import vppRoutes from '../../../backend/routes/vppRoutes.js';
+import vppRoutes from '../../routes/vppRoutes.js';
+import vppTradingStrategyRoutes from '../../routes/vppTradingStrategy.js';
+import vppResourceRoutes from '../../routes/vppResourceRoutes.js';
+import vppTradingRoutes from '../../routes/vppTradingRoutes.js';
 
 const router = express.Router();
 
@@ -36,7 +39,10 @@ router.get('/', (req, res) => {
       carbon: '/carbon',
       maintenance: '/maintenance',
       digitalTwin: '/digital-twin',
-      vpp: '/vpp'
+      vpp: '/vpp',
+      vppTradingStrategy: '/vpp/trading-strategy',
+      vppResource: '/vpp/resource',
+      vppTrading: '/vpp/trading'
     }
   });
 });
@@ -76,6 +82,9 @@ router.use('/carbon', authenticate, carbonRoutes);
 router.use('/maintenance', authenticate, maintenanceRoutes);
 router.use('/digital-twin', authenticate, digitalTwinRoutes);
 router.use('/vpp', authenticate, vppRoutes);
+router.use('/vpp/trading-strategy', authenticate, vppTradingStrategyRoutes);
+router.use('/vpp/resource', authenticate, vppResourceRoutes);
+router.use('/vpp/trading', authenticate, vppTradingRoutes);
 
 // 404处理
 router.use('*', (req, res) => {
@@ -93,7 +102,9 @@ router.use('*', (req, res) => {
       'GET /carbon',
       'GET /maintenance',
       'GET /digital-twin',
-      'GET /vpp'
+      'GET /vpp',
+      'GET /vpp/resource',
+      'GET /vpp/trading'
     ]
   });
 });

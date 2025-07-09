@@ -100,12 +100,148 @@ class VPPMarketConnectorService extends EventEmitter {
     try {
       await this.createTables();
       await this.loadMarketConfigurations();
+      await this.initializeYunnanMarketConfig();
       await this.initializeConnections();
       await this.startHeartbeat();
       
       logger.info('VPP市场连接器服务初始化完成');
     } catch (error) {
       logger.error('VPP市场连接器服务初始化失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 初始化云南省电力市场配置
+   */
+  async initializeYunnanMarketConfig() {
+    try {
+      const db = await dbPromise;
+      
+      // 检查云南省电力市场配置是否存在
+      const existingConfig = await db('vpp_market_configs')
+        .where('market_id', 'yunnan_power_market')
+        .first();
+      
+      if (!existingConfig) {
+        // 创建云南省电力市场配置
+        const yunnanConfig = {
+          market_id: 'yunnan_power_market',
+          market_name: '云南省电力市场',
+          market_type: MARKET_TYPE.SPOT,
+          region: '云南省',
+          operator: '云南电力交易中心',
+          api_type: API_TYPE.REST,
+          base_url: 'https://api.ynpowermarket.com/v1',
+          websocket_url: 'wss://ws.ynpowermarket.com/v1/stream',
+          authentication_config: {
+            type: 'oauth2',
+            client_id: process.env.YUNNAN_MARKET_CLIENT_ID || 'demo_client',
+            client_secret: process.env.YUNNAN_MARKET_CLIENT_SECRET || 'demo_secret',
+            token_url: 'https://auth.ynpowermarket.com/oauth/token',
+            scope: 'market_data trading settlement'
+          },
+          api_endpoints: {
+            market_data: '/market/data',
+            price_forecast: '/market/forecast/price',
+            order_submit: '/trading/orders',
+            order_status: '/trading/orders/{order_id}',
+            settlement: '/settlement/daily',
+            capacity_market: '/capacity/auctions',
+            ancillary_services: '/ancillary/bids'
+          },
+          data_mapping: {
+            price_field: 'market_price',
+            volume_field: 'traded_volume',
+            timestamp_field: 'trading_time',
+            symbol_field: 'product_code'
+          },
+          trading_rules: {
+            min_order_size: 1.0, // MW
+            max_order_size: 100.0, // MW
+            price_increment: 0.01, // 元/MWh
+            trading_hours: {
+              start: '09:00',
+              end: '15:30'
+            },
+            settlement_period: 'daily',
+            bid_deadline: '10:00'
+          },
+          settlement_rules: {
+            settlement_currency: 'CNY',
+            settlement_frequency: 'daily',
+            payment_terms: 'T+3',
+            penalty_rate: 0.05
+          },
+          is_active: true,
+          is_trading_enabled: true,
+          priority: 1
+        };
+        
+        await db('vpp_market_configs').insert(yunnanConfig);
+        logger.info('云南省电力市场配置已创建');
+      }
+      
+      // 创建共享储能容量租赁市场配置
+      const storageConfig = await db('vpp_market_configs')
+        .where('market_id', 'yunnan_storage_market')
+        .first();
+      
+      if (!storageConfig) {
+        const yunnanStorageConfig = {
+          market_id: 'yunnan_storage_market',
+          market_name: '云南省共享储能容量租赁市场',
+          market_type: MARKET_TYPE.CAPACITY,
+          region: '云南省',
+          operator: '云南电力交易中心',
+          api_type: API_TYPE.REST,
+          base_url: 'https://api.ynstoragemarket.com/v1',
+          websocket_url: 'wss://ws.ynstoragemarket.com/v1/stream',
+          authentication_config: {
+            type: 'oauth2',
+            client_id: process.env.YUNNAN_STORAGE_CLIENT_ID || 'demo_storage_client',
+            client_secret: process.env.YUNNAN_STORAGE_CLIENT_SECRET || 'demo_storage_secret',
+            token_url: 'https://auth.ynstoragemarket.com/oauth/token',
+            scope: 'capacity_trading settlement monitoring'
+          },
+          api_endpoints: {
+            capacity_listing: '/capacity/listings',
+            capacity_booking: '/capacity/bookings',
+            real_time_status: '/capacity/status',
+            settlement: '/settlement/capacity',
+            performance_data: '/monitoring/performance'
+          },
+          data_mapping: {
+            capacity_field: 'available_capacity',
+            price_field: 'rental_price',
+            duration_field: 'rental_duration',
+            location_field: 'storage_location'
+          },
+          trading_rules: {
+            min_capacity: 1.0, // MWh
+            max_capacity: 50.0, // MWh
+            min_duration: 1, // hours
+            max_duration: 24, // hours
+            price_unit: 'CNY/MWh/hour',
+            booking_advance: 2 // hours
+          },
+          settlement_rules: {
+            settlement_currency: 'CNY',
+            settlement_frequency: 'hourly',
+            payment_terms: 'T+1',
+            performance_penalty: 0.1
+          },
+          is_active: true,
+          is_trading_enabled: true,
+          priority: 2
+        };
+        
+        await db('vpp_market_configs').insert(yunnanStorageConfig);
+        logger.info('云南省共享储能容量租赁市场配置已创建');
+      }
+      
+    } catch (error) {
+      logger.error('初始化云南省电力市场配置失败:', error);
       throw error;
     }
   }
