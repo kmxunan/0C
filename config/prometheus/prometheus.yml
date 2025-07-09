@@ -1,0 +1,155 @@
+# Prometheus 配置文件
+# 零碳园区数字孪生系统V2.0监控配置
+
+global:
+  scrape_interval: 15s # 默认抓取间隔
+  evaluation_interval: 15s # 规则评估间隔
+  external_labels:
+    cluster: 'zero-carbon-park'
+    environment: 'production'
+
+# 规则文件配置
+rule_files:
+  - "alert_rules.yml"
+  - "recording_rules.yml"
+
+# 告警管理器配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# 抓取配置
+scrape_configs:
+  # Prometheus自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # 零碳园区主应用监控
+  - job_name: 'zero-carbon-system'
+    static_configs:
+      - targets: ['energy-system:80']
+    scrape_interval: 10s
+    metrics_path: /metrics
+    scrape_timeout: 5s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+
+  # Node Exporter - 系统指标
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # Redis监控
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+
+  # MQTT Broker监控
+  - job_name: 'mqtt-broker'
+    static_configs:
+      - targets: ['mqtt-broker:9001']
+    scrape_interval: 30s
+
+  # 数据库监控
+  - job_name: 'database'
+    static_configs:
+      - targets: ['db-exporter:9187']
+    scrape_interval: 30s
+
+  # 业务指标监控
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: ['energy-system:80']
+    scrape_interval: 30s
+    metrics_path: /api/metrics/business
+    honor_labels: true
+
+  # 能碳一体化监测中心
+  - job_name: 'energy-carbon-center'
+    static_configs:
+      - targets: ['energy-system:80']
+    scrape_interval: 15s
+    metrics_path: /api/metrics/energy-carbon
+    params:
+      module: ['energy_carbon_integration']
+
+  # 用能结构转型与优化调度中心
+  - job_name: 'energy-optimization-center'
+    static_configs:
+      - targets: ['energy-system:80']
+    scrape_interval: 20s
+    metrics_path: /api/metrics/energy-optimization
+
+  # 企业节能降碳与对标诊断中心
+  - job_name: 'enterprise-diagnosis-center'
+    static_configs:
+      - targets: ['energy-system:80']
+    scrape_interval: 30s
+    metrics_path: /api/metrics/enterprise-diagnosis
+
+  # 资源循环利用与固废追溯中心
+  - job_name: 'resource-circulation-center'
+    static_configs:
+      - targets: ['energy-system:80']
+    scrape_interval: 30s
+    metrics_path: /api/metrics/resource-circulation
+
+  # 虚拟电厂运营与交易中心
+  - job_name: 'virtual-power-plant'
+    static_configs:
+      - targets: ['energy-system:80']
+    scrape_interval: 15s
+    metrics_path: /api/metrics/virtual-power-plant
+
+  # 数据资产目录与标准化管理中心
+  - job_name: 'data-asset-center'
+    static_configs:
+      - targets: ['energy-system:80']
+    scrape_interval: 30s
+    metrics_path: /api/metrics/data-asset
+
+# 远程写入配置（可选）
+# remote_write:
+#   - url: "http://remote-storage:9201/write"
+#     queue_config:
+#       max_samples_per_send: 1000
+#       max_shards: 200
+#       capacity: 2500
+
+# 远程读取配置（可选）
+# remote_read:
+#   - url: "http://remote-storage:9201/read"
+#     read_recent: true
+
+# 存储配置
+storage:
+  tsdb:
+    path: /prometheus/data
+    retention.time: 30d
+    retention.size: 50GB
+    wal-compression: true
+
+# Web配置
+web:
+  console.templates: /etc/prometheus/consoles
+  console.libraries: /etc/prometheus/console_libraries
+  enable-lifecycle: true
+  enable-admin-api: true
+  max-connections: 512
+  read-timeout: 30s
+  route-prefix: /
+  external-url: http://prometheus:9090
+
+# 日志配置
+log:
+  level: info
+  format: logfmt

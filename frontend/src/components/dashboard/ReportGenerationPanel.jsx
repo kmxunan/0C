@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Grid, Paper, Typography, Box, Button, TextField, MenuItem, FormControl, InputLabel, Select, Divider, CircularProgress, Alert, Chip } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
-import { Download, FileDownload, FilterList, CalendarToday, Assessment, CheckCircle, Warning } from '@mui/icons-material';
+import { Warning, CheckCircle, FileDownload, Assessment } from '@mui/icons-material';
+import { Grid, Paper, Typography, Box, Button, TextField, MenuItem, FormControl, InputLabel, Select, Divider, CircularProgress, Alert } from '@mui/material';
+
+
 import axios from 'axios';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -9,7 +10,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { zhCN } from 'date-fns/locale';
 
 const ReportGenerationPanel = () => {
-  const theme = useTheme();
+
   const [reportType, setReportType] = useState('energy');
   const [timeRange, setTimeRange] = useState('daily');
   const [startDate, setStartDate] = useState(new Date());

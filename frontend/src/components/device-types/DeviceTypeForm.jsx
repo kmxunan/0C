@@ -11,18 +11,18 @@ import {
   FormControl,
   InputLabel,
   Select,
-  Divider,
+
   Chip,
   CircularProgress,
   Alert,
   Stepper,
   Step,
-  StepLabel,
-  Autocomplete
+  StepLabel
 } from '@mui/material';
 import { Save as SaveIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import axios from 'axios';
 import JsonEditor from '../common/JsonEditor';
+
 
 // 步骤标签
 const steps = ['基本信息', '数据模式定义'];
@@ -35,6 +35,7 @@ const DeviceTypeForm = () => {
   // 状态管理
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(isEditMode);
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -49,9 +50,7 @@ const DeviceTypeForm = () => {
   });
 
   // 制造商列表
-  const [manufacturers, setManufacturers] = useState([
-    '施耐德', '西门子', '霍尼韦尔', 'ABB', '华为', '小米', '其他'
-  ]);
+
 
   // 类别列表
   const [categories] = useState([
@@ -60,32 +59,8 @@ const DeviceTypeForm = () => {
 
   // 加载设备类型数据（编辑模式）
   useEffect(() => {
-    if (isEditMode) {
-      fetchDeviceType();
-    }
-  }, [id]);
 
-  // 获取设备类型详情
-  const fetchDeviceType = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`/api/device-types/${id}`);
-      const typeData = response.data.data;
-
-      setFormData({
-        name: typeData.name,
-        description: typeData.description || '',
-        category: typeData.category || '',
-        manufacturer: typeData.manufacturer || '',
-        data_schema: typeData.data_schema || '{}'
-      });
-    } catch (err) {
-      console.error('获取设备类型详情失败:', err);
-      setError('加载设备类型数据失败，请刷新页面重试');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [id, isEditMode]);
 
   // 处理表单字段变化
   const handleChange = (e) => {
@@ -209,24 +184,7 @@ const DeviceTypeForm = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <Autocomplete
-                options={manufacturers}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="制造商"
-                    name="manufacturer"
-                    value={formData.manufacturer}
-                    onChange={handleChange}
-                    disabled={loading}
-                  />
-                )}
-                onChange={(_, newValue) => {
-                  setFormData(prev => ({ ...prev, manufacturer: newValue || '' }));
-                }}
-              />
-            </Grid>
+
             <Grid item xs={12}>
               <TextField
                 fullWidth

@@ -1,0 +1,89 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "Zero Carbon Digital Twin - Device LOD1"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "DeviceLOD1Scene",
+      "nodes": [0]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "SimpleDevice",
+      "mesh": 0,
+      "translation": [0, 0, 0]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "SimpleDeviceMesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1
+          },
+          "indices": 2,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "DeviceMaterial",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [0.7, 0.7, 0.8, 1.0],
+        "metallicFactor": 0.5,
+        "roughnessFactor": 0.4
+      }
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 8,
+      "type": "VEC3",
+      "max": [0.4, 0.4, 0.4],
+      "min": [-0.4, -0.4, -0.4]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 8,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5123,
+      "count": 36,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 96
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 96,
+      "byteLength": 96
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 192,
+      "byteLength": 72
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 264
+    }
+  ]
+}

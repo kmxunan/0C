@@ -1,3 +1,4 @@
+/* eslint-disable no-console, no-magic-numbers */
 import sqlite3 from 'sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -58,7 +59,7 @@ function logQueryExecution(query, params, executionTime) {
       maxTime: 0,
       avgTime: 0,
       lastExecution: new Date(),
-      paramsExamples: []
+      paramsExamples: [],
     };
   }
 
@@ -77,11 +78,12 @@ function logQueryExecution(query, params, executionTime) {
 
   // 如果执行时间超过阈值，记录详细信息
   if (executionTime >= MIN_EXECUTION_TIME) {
-    const logEntry = `[${new Date().toISOString()}] 慢查询: ${executionTime}ms
+    const logEntry =
+      `[${new Date().toISOString()}] 慢查询: ${executionTime}ms
 ` +
-                     `查询: ${normalizedQuery}
+      `查询: ${normalizedQuery}
 ` +
-                     `参数: ${JSON.stringify(params, null, 2)}
+      `参数: ${JSON.stringify(params, null, 2)}
 
 `;
 
@@ -92,7 +94,7 @@ function logQueryExecution(query, params, executionTime) {
 
 // 包装查询方法
 function wrapQueryMethod(originalMethod) {
-  return function(query, params, callback) {
+  return function (query, params, callback) {
     const startTime = Date.now();
 
     // 处理参数和回调的不同情况
@@ -102,7 +104,7 @@ function wrapQueryMethod(originalMethod) {
     }
 
     // 执行原始查询
-    return originalMethod.call(db, query, params, function(...args) {
+    return originalMethod.call(db, query, params, function (...args) {
       const executionTime = Date.now() - startTime;
       logQueryExecution(query, params, executionTime);
 
@@ -115,9 +117,9 @@ function wrapQueryMethod(originalMethod) {
 }
 
 // 应用包装后的方法
- db.all = wrapQueryMethod(originalAll);
- db.get = wrapQueryMethod(originalGet);
- db.run = wrapQueryMethod(originalRun);
+db.all = wrapQueryMethod(originalAll);
+db.get = wrapQueryMethod(originalGet);
+db.run = wrapQueryMethod(originalRun);
 
 // 设置分析超时
 setTimeout(() => {
@@ -131,12 +133,11 @@ setTimeout(() => {
     `总查询类型: ${Object.keys(queryStats).length}`,
     `
 ==================== 慢查询统计 ====================
-`
+`,
   ];
 
   // 按平均执行时间排序查询
-  const sortedQueries = Object.entries(queryStats)
-    .sort(([, a], [, b]) => b.avgTime - a.avgTime);
+  const sortedQueries = Object.entries(queryStats).sort(([, a], [, b]) => b.avgTime - a.avgTime);
 
   // 添加每个查询的统计信息
   sortedQueries.forEach(([query, stats]) => {

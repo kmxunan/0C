@@ -1,0 +1,361 @@
+name: 代码质量检查
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # 每天凌晨 2 点运行质量检查
+    - cron: '0 2 * * *'
+
+jobs:
+  code-quality:
+    name: 代码质量分析
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整历史用于 SonarCloud 分析
+
+      - name: 设置 Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: |
+          npm ci
+          npm install -g typescript
+
+      - name: 缓存质量检查结果
+        uses: actions/cache@v3
+        with:
+          path: |
+            reports
+            coverage
+            .eslintcache
+          key: quality-${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            quality-${{ runner.os }}-${{ matrix.node-version }}-
+            quality-${{ runner.os }}-
+
+      - name: ESLint 检查
+        run: |
+          npm run lint:enhanced
+          npm run lint:enhanced -- --format json --output-file reports/eslint-report.json || true
+        continue-on-error: true
+
+      - name: Prettier 格式检查
+        run: npm run format:check
+        continue-on-error: true
+
+      - name: TypeScript 类型检查
+        run: npm run type:check
+        continue-on-error: true
+
+      - name: 运行测试和覆盖率
+        run: |
+          npm run test:ci
+          npm run test:coverage
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: 安全漏洞检查
+        run: |
+          npm audit --audit-level=moderate --json > reports/security-audit.json || true
+          npm run security:audit
+        continue-on-error: true
+
+      - name: 依赖项检查
+        run: |
+          npm outdated --json > reports/outdated-dependencies.json || true
+        continue-on-error: true
+
+      - name: 运行增强质量检查
+        run: |
+          mkdir -p reports
+          npm run quality:monitor
+        continue-on-error: true
+
+      - name: 上传测试覆盖率到 Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: SonarCloud 扫描
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=zero-carbon-park
+            -Dsonar.organization=your-org
+            -Dsonar.sources=src
+            -Dsonar.tests=tests
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+            -Dsonar.eslint.reportPaths=reports/eslint-report.json
+            -Dsonar.coverage.exclusions=**/*.test.js,**/*.spec.js,**/node_modules/**
+        continue-on-error: true
+
+      - name: 质量门检查
+        run: |
+          node -e "
+            const fs = require('fs');
+            const reportPath = 'reports/quality-report.json';
+            if (fs.existsSync(reportPath)) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              console.log('质量分数:', report.overall.score);
+              console.log('质量等级:', report.overall.grade);
+              console.log('状态:', report.overall.status);
+              
+              if (report.overall.score < 80) {
+                console.error('❌ 质量门检查失败: 分数低于 80');
+                process.exit(1);
+              }
+              
+              // 检查关键指标
+              const criticalIssues = [];
+              if (report.checks.eslint.errors > 0) {
+                criticalIssues.push('ESLint 错误');
+              }
+              if (report.checks.typescript.status === 'FAIL') {
+                criticalIssues.push('TypeScript 类型错误');
+              }
+              if (report.checks.security.vulnerabilities?.high > 0) {
+                criticalIssues.push('高危安全漏洞');
+              }
+              if (report.metrics.testCoverage < 70) {
+                criticalIssues.push('测试覆盖率过低');
+              }
+              
+              if (criticalIssues.length > 0) {
+                console.error('❌ 发现关键问题:', criticalIssues.join(', '));
+                process.exit(1);
+              }
+              
+              console.log('✅ 质量门检查通过');
+            } else {
+              console.warn('⚠️  质量报告文件不存在');
+            }
+          "
+
+      - name: 生成质量徽章
+        run: |
+          node -e "
+            const fs = require('fs');
+            const reportPath = 'reports/quality-report.json';
+            if (fs.existsSync(reportPath)) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              const score = report.overall.score;
+              const grade = report.overall.grade;
+              const color = score >= 90 ? 'brightgreen' : score >= 80 ? 'green' : score >= 70 ? 'yellow' : score >= 60 ? 'orange' : 'red';
+              
+              const badge = {
+                schemaVersion: 1,
+                label: 'code quality',
+                message: \`\${score}/100 (\${grade})\`,
+                color: color
+              };
+              
+              fs.writeFileSync('reports/quality-badge.json', JSON.stringify(badge, null, 2));
+              console.log('质量徽章已生成');
+            }
+          "
+
+      - name: 上传质量报告
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: quality-reports-${{ matrix.node-version }}
+          path: |
+            reports/
+            coverage/
+          retention-days: 30
+
+      - name: 评论 PR（如果是 PR）
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'reports/quality-report.json';
+
+            if (fs.existsSync(reportPath)) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              
+              const comment = `
+            ## 🔍 代码质量报告
+
+            **总体评分**: ${report.overall.score}/100 (${report.overall.grade})
+            **状态**: ${report.overall.status === 'PASS' ? '✅ 通过' : '❌ 失败'}
+
+            ### 详细检查结果
+
+            | 检查项 | 状态 | 分数 | 详情 |
+            |--------|------|------|------|
+            | ESLint | ${report.checks.eslint.status === 'PASS' ? '✅' : '❌'} | ${report.checks.eslint.score}/100 | ${report.checks.eslint.errors || 0} 错误, ${report.checks.eslint.warnings || 0} 警告 |
+            | Prettier | ${report.checks.prettier.status === 'PASS' ? '✅' : '❌'} | ${report.checks.prettier.score}/100 | 格式检查 |
+            | TypeScript | ${report.checks.typescript.status === 'PASS' ? '✅' : '❌'} | ${report.checks.typescript.score}/100 | 类型检查 |
+            | 测试覆盖率 | ${report.checks.tests.status === 'PASS' ? '✅' : '❌'} | ${report.checks.tests.score}/100 | ${report.metrics.testCoverage.toFixed(1)}% |
+            | 安全检查 | ${report.checks.security.status === 'PASS' ? '✅' : '❌'} | ${report.checks.security.score}/100 | ${report.checks.security.vulnerabilities?.total || 0} 个漏洞 |
+
+            ### 关键指标
+
+            - 📊 **测试覆盖率**: ${report.metrics.testCoverage.toFixed(1)}%
+            - 📝 **代码行数**: ${report.metrics.linesOfCode.toLocaleString()}
+            - 🔒 **安全漏洞**: ${report.checks.security.vulnerabilities?.total || 0}
+            - ⚠️ **ESLint 问题**: ${(report.checks.eslint.errors || 0) + (report.checks.eslint.warnings || 0)}
+
+            ${report.recommendations.length > 0 ? `
+            ### 🔧 改进建议
+
+            ${report.recommendations.slice(0, 5).map((rec, i) => 
+              `${i + 1}. **[${rec.priority}]** ${rec.message}\n   \`${rec.action}\``
+            ).join('\n\n')}
+            ` : ''}
+
+            ---
+            *报告生成时间: ${new Date(report.timestamp).toLocaleString('zh-CN')}*
+            `;
+
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
+
+  performance-test:
+    name: 性能测试
+    runs-on: ubuntu-latest
+    needs: code-quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 运行性能测试
+        run: |
+          npm run test:load
+          npm run test:system
+        continue-on-error: true
+
+      - name: 上传性能报告
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: performance-reports
+          path: |
+            reports/performance/
+            logs/
+          retention-days: 7
+
+  security-scan:
+    name: 安全扫描
+    runs-on: ubuntu-latest
+    needs: code-quality
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 运行 Trivy 漏洞扫描
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: 上传 Trivy 扫描结果到 GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: 运行 CodeQL 分析
+        uses: github/codeql-action/analyze@v2
+        with:
+          languages: javascript
+          queries: security-and-quality
+
+  dependency-review:
+    name: 依赖项审查
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 依赖项审查
+        uses: actions/dependency-review-action@v3
+        with:
+          fail-on-severity: moderate
+          allow-licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC
+
+  quality-gate:
+    name: 质量门
+    runs-on: ubuntu-latest
+    needs: [code-quality, security-scan]
+    if: always()
+
+    steps:
+      - name: 检查质量门状态
+        run: |
+          echo "代码质量检查状态: ${{ needs.code-quality.result }}"
+          echo "安全扫描状态: ${{ needs.security-scan.result }}"
+
+          if [[ "${{ needs.code-quality.result }}" != "success" ]]; then
+            echo "❌ 代码质量检查失败"
+            exit 1
+          fi
+
+          if [[ "${{ needs.security-scan.result }}" != "success" ]]; then
+            echo "❌ 安全扫描失败"
+            exit 1
+          fi
+
+          echo "✅ 所有质量检查通过"
+
+      - name: 更新状态检查
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          script: |
+            const status = '${{ needs.code-quality.result }}' === 'success' && '${{ needs.security-scan.result }}' === 'success' ? 'success' : 'failure';
+            const description = status === 'success' ? '所有质量检查通过' : '质量检查失败';
+
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: status,
+              target_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              description: description,
+              context: 'quality-gate'
+            });

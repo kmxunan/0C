@@ -182,6 +182,7 @@ const EnergyMonitoring = () => {
   };
 
   const formatPower = (power) => {
+    if (power === undefined || power === null) return '0.0W';
     if (power >= 1000) {
       return `${(power / 1000).toFixed(1)}kW`;
     }
@@ -258,7 +259,7 @@ const EnergyMonitoring = () => {
             </Typography>
             <LinearProgress 
               variant="determinate" 
-              value={realTimeData.batteryLevel} 
+              value={realTimeData.batteryLevel || 0} 
               sx={{ mt: 1 }}
             />
           </CardContent>

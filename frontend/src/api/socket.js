@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
-// 从环境变量获取WebSocket URL，默认为ws://localhost:3000/ws
-const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:3000/ws';
+// 从环境变量获取WebSocket URL，默认为ws://localhost:1125/ws
+const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:1125/ws';
 
 /**
  * 自定义WebSocket Hook

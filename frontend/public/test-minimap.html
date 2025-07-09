@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小地图和视角管理器测试页面</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.active {
+            background: #28a745;
+        }
+        .info-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ 小地图导航和视角管理器测试页面</h1>
+        
+        <div class="test-section">
+            <h2>📋 功能检查清单</h2>
+            <div class="info-box">
+                <h3>✅ 已完成的功能：</h3>
+                <ul>
+                    <li>✅ MinimapNavigation 组件创建</li>
+                    <li>✅ ViewportManager 组件创建</li>
+                    <li>✅ EnhancedDigitalTwinViewer 集成</li>
+                    <li>✅ FullscreenDigitalTwin 控制按钮</li>
+                    <li>✅ NavigationControls 按钮集成</li>
+                    <li>✅ 项目文档更新</li>
+                </ul>
+                
+                <h3>🔍 需要验证的功能：</h3>
+                <ul>
+                    <li>🔲 小地图在数字孪生页面中显示</li>
+                    <li>🔲 视角管理器在数字孪生页面中显示</li>
+                    <li>🔲 切换按钮正常工作</li>
+                    <li>🔲 WebGL 上下文正常</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🚨 已知问题</h2>
+            <div class="status error">
+                <strong>WebGL 上下文丢失错误：</strong>
+                <ul>
+                    <li>THREE.WebGLRenderer: Context Lost</li>
+                    <li>GL_INVALID_OPERATION: invalid mailbox name</li>
+                    <li>GL_INVALID_OPERATION: texture is not a shared image</li>
+                </ul>
+            </div>
+            
+            <div class="status warning">
+                <strong>可能的解决方案：</strong>
+                <ul>
+                    <li>清除浏览器缓存和数据</li>
+                    <li>重启浏览器</li>
+                    <li>更新显卡驱动</li>
+                    <li>尝试使用不同的浏览器</li>
+                    <li>检查硬件加速设置</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 快速操作</h2>
+            <button class="button" onclick="window.open('/digital-twin', '_blank')">
+                🚀 打开数字孪生页面
+            </button>
+            <button class="button" onclick="clearCache()">
+                🗑️ 清除缓存
+            </button>
+            <button class="button" onclick="checkWebGL()">
+                🔍 检查 WebGL 支持
+            </button>
+            <button class="button" onclick="window.location.reload()">
+                🔄 刷新页面
+            </button>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 WebGL 状态检查</h2>
+            <div id="webgl-status">正在检查...</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📝 使用说明</h2>
+            <div class="info-box">
+                <h3>🗺️ 小地图导航功能：</h3>
+                <ul>
+                    <li>显示园区概览地图</li>
+                    <li>实时显示相机位置</li>
+                    <li>点击地图快速导航</li>
+                    <li>支持缩放和图层控制</li>
+                </ul>
+                
+                <h3>📹 视角管理器功能：</h3>
+                <ul>
+                    <li>预设视角：总览、航拍、地面、建筑聚焦</li>
+                    <li>自定义视角保存和管理</li>
+                    <li>平滑视角切换动画</li>
+                    <li>聚焦选中建筑功能</li>
+                </ul>
+                
+                <h3>🎮 控制方式：</h3>
+                <ul>
+                    <li>点击顶部控制栏的地图图标切换小地图</li>
+                    <li>点击顶部控制栏的摄像头图标切换视角管理器</li>
+                    <li>在全屏模式下，按 H 键显示/隐藏控制面板</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function clearCache() {
+            if ('caches' in window) {
+                caches.keys().then(function(names) {
+                    names.forEach(function(name) {
+                        caches.delete(name);
+                    });
+                });
+            }
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('缓存已清除，建议刷新页面');
+        }
+        
+        function checkWebGL() {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+            const statusDiv = document.getElementById('webgl-status');
+            
+            if (gl) {
+                const info = {
+                    vendor: gl.getParameter(gl.VENDOR),
+                    renderer: gl.getParameter(gl.RENDERER),
+                    version: gl.getParameter(gl.VERSION),
+                    shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION),
+                    maxTextureSize: gl.getParameter(gl.MAX_TEXTURE_SIZE),
+                    maxViewportDims: gl.getParameter(gl.MAX_VIEWPORT_DIMS)
+                };
+                
+                statusDiv.innerHTML = `
+                    <div class="status success">
+                        <strong>✅ WebGL 支持正常</strong><br>
+                        <strong>供应商:</strong> ${info.vendor}<br>
+                        <strong>渲染器:</strong> ${info.renderer}<br>
+                        <strong>版本:</strong> ${info.version}<br>
+                        <strong>着色器语言版本:</strong> ${info.shadingLanguageVersion}<br>
+                        <strong>最大纹理尺寸:</strong> ${info.maxTextureSize}<br>
+                        <strong>最大视口尺寸:</strong> ${info.maxViewportDims[0]} x ${info.maxViewportDims[1]}
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="status error">
+                        <strong>❌ WebGL 不支持</strong><br>
+                        您的浏览器或设备不支持 WebGL，这可能导致 3D 功能无法正常工作。
+                    </div>
+                `;
+            }
+        }
+        
+        // 页面加载时自动检查 WebGL
+        window.addEventListener('load', checkWebGL);
+    </script>
+</body>
+</html>

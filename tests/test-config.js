@@ -7,22 +7,22 @@ export const testConfig = {
   // 服务URL配置
   services: {
     backend: {
-      url: 'http://localhost:3000',
+      url: 'http://localhost:1125',
       healthEndpoint: '/health',
       timeout: 10000
     },
     frontend: {
-      url: 'http://localhost:3001',
+      url: 'http://localhost:7240',
       timeout: 15000
     }
   },
   
   // 测试超时配置
   timeouts: {
-    api: 30000,        // API测试超时 (30秒)
-    integration: 300000, // 集成测试超时 (5分钟)
+    api: 11250,        // API测试超时 (30秒)
+    integration: 112500, // 集成测试超时 (5分钟)
     pwa: 180000,       // PWA测试超时 (3分钟)
-    pageLoad: 30000,   // 页面加载超时 (30秒)
+    pageLoad: 11250,   // 页面加载超时 (30秒)
     element: 10000     // 元素等待超时 (10秒)
   },
   
@@ -105,7 +105,7 @@ export const testConfig = {
   performance: {
     thresholds: {
       // 页面加载时间阈值 (毫秒)
-      pageLoad: 3000,
+      pageLoad: 1125,
       // 首次内容绘制时间阈值 (毫秒)
       firstContentfulPaint: 1500,
       // 最大内容绘制时间阈值 (毫秒)

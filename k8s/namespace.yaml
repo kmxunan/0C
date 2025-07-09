@@ -1,0 +1,54 @@
+# 零碳园区数字孪生系统 - Kubernetes命名空间配置
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: zero-carbon-system
+  labels:
+    name: zero-carbon-system
+    environment: production
+    project: zero-carbon-digital-twin
+    version: v2.0
+  annotations:
+    description: "零碳园区数字孪生系统V2.0生产环境"
+    contact: "zero-carbon-team@example.com"
+    created-by: "zero-carbon-devops"
+---
+# 资源配额
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: zero-carbon-quota
+  namespace: zero-carbon-system
+spec:
+  hard:
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    persistentvolumeclaims: "10"
+    services: "20"
+    secrets: "10"
+    configmaps: "10"
+---
+# 限制范围
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: zero-carbon-limits
+  namespace: zero-carbon-system
+spec:
+  limits:
+  - default:
+      cpu: "1"
+      memory: "2Gi"
+    defaultRequest:
+      cpu: "100m"
+      memory: "128Mi"
+    type: Container
+  - max:
+      cpu: "4"
+      memory: "8Gi"
+    min:
+      cpu: "50m"
+      memory: "64Mi"
+    type: Container

@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * 初始化示例设备数据
  * 用于演示和测试设备管理功能
@@ -25,10 +26,10 @@ const sampleDevices = [
     parameters: JSON.stringify({
       voltage: '380V',
       frequency: '50Hz',
-      phases: 3
+      phases: 3,
     }),
     status: 'online',
-    remark: '主要配电设备，负责整栋楼供电'
+    remark: '主要配电设备，负责整栋楼供电',
   },
   {
     id: uuidv4(),
@@ -47,16 +48,16 @@ const sampleDevices = [
     parameters: JSON.stringify({
       efficiency: '21.2%',
       temperature_coefficient: '-0.35%/°C',
-      max_system_voltage: '1500V'
+      max_system_voltage: '1500V',
     }),
     status: 'online',
-    remark: '高效单晶硅太阳能电池板'
+    remark: '高效单晶硅太阳能电池板',
   },
   {
     id: uuidv4(),
     building_id: 'default-building',
     name: '储能系统C1',
-    type: 'battery_storage',
+    type: 'battery-storage',
     category: 'storage',
     model: 'BYD-ESS-100',
     manufacturer: '比亚迪',
@@ -70,10 +71,10 @@ const sampleDevices = [
       capacity: '100kWh',
       voltage: '768V',
       efficiency: '95%',
-      cycles: '6000+'
+      cycles: '6000+',
     }),
     status: 'online',
-    remark: '磷酸铁锂电池储能系统'
+    remark: '磷酸铁锂电池储能系统',
   },
   {
     id: uuidv4(),
@@ -93,10 +94,10 @@ const sampleDevices = [
       rotor_diameter: '130m',
       hub_height: '90m',
       cut_in_speed: '3m/s',
-      rated_speed: '11m/s'
+      rated_speed: '11m/s',
     }),
     status: 'online',
-    remark: '直驱永磁同步风力发电机'
+    remark: '直驱永磁同步风力发电机',
   },
   {
     id: uuidv4(),
@@ -115,10 +116,10 @@ const sampleDevices = [
     parameters: JSON.stringify({
       cooling_capacity: '200RT',
       refrigerant: 'R134a',
-      efficiency: 'COP 3.2'
+      efficiency: 'COP 3.2',
     }),
     status: 'online',
-    remark: '离心式冷水机组'
+    remark: '离心式冷水机组',
   },
   {
     id: uuidv4(),
@@ -138,10 +139,10 @@ const sampleDevices = [
       luminous_efficacy: '150lm/W',
       color_temperature: '3000K-6500K',
       dimming: '0-100%',
-      lifespan: '50000h'
+      lifespan: '50000h',
     }),
     status: 'online',
-    remark: 'LED智能调光照明系统'
+    remark: 'LED智能调光照明系统',
   },
   {
     id: uuidv4(),
@@ -161,10 +162,10 @@ const sampleDevices = [
       output_voltage: '200-750V',
       output_current: '0-125A',
       efficiency: '95%',
-      connector: 'GB/T 20234.3'
+      connector: 'GB/T 20234.3',
     }),
     status: 'offline',
-    remark: '直流快充充电桩，维护中'
+    remark: '直流快充充电桩，维护中',
   },
   {
     id: uuidv4(),
@@ -184,11 +185,11 @@ const sampleDevices = [
       accuracy: '0.2S级',
       voltage: '3×220/380V',
       current: '1.5(6)A',
-      frequency: '50Hz'
+      frequency: '50Hz',
     }),
     status: 'online',
-    remark: '三相四线智能电能表'
-  }
+    remark: '三相四线智能电能表',
+  },
 ];
 
 /**
@@ -197,20 +198,23 @@ const sampleDevices = [
 export async function initSampleDevices() {
   try {
     console.log('开始初始化示例设备数据...');
-    
+
     // 检查是否已有设备数据
     const existingDevices = await new Promise((resolve, reject) => {
       db.all('SELECT COUNT(*) as count FROM devices', (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
+        if (err) {
+          reject(err);
+        } else {
+          resolve(rows);
+        }
       });
     });
-    
+
     if (existingDevices[0].count > 0) {
       console.log(`数据库中已有 ${existingDevices[0].count} 个设备，跳过初始化`);
       return;
     }
-    
+
     // 插入示例设备
     const insertSql = `
       INSERT INTO devices (
@@ -219,37 +223,43 @@ export async function initSampleDevices() {
         rated_power, parameters, status, remark, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
-    
+
     for (const device of sampleDevices) {
       await new Promise((resolve, reject) => {
-        db.run(insertSql, [
-          device.id,
-          device.building_id,
-          device.name,
-          device.type,
-          device.category,
-          device.model,
-          device.manufacturer,
-          device.serial_number,
-          device.location,
-          device.coordinates,
-          device.install_date,
-          device.warranty_date,
-          device.rated_power,
-          device.parameters,
-          device.status,
-          device.remark
-        ], function(err) {
-          if (err) reject(err);
-          else resolve(this.lastID);
-        });
+        db.run(
+          insertSql,
+          [
+            device.id,
+            device.building_id,
+            device.name,
+            device.type,
+            device.category,
+            device.model,
+            device.manufacturer,
+            device.serial_number,
+            device.location,
+            device.coordinates,
+            device.install_date,
+            device.warranty_date,
+            device.rated_power,
+            device.parameters,
+            device.status,
+            device.remark,
+          ],
+          function (err) {
+            if (err) {
+              reject(err);
+            } else {
+              resolve(this.lastID);
+            }
+          }
+        );
       });
-      
+
       console.log(`✅ 已创建设备: ${device.name}`);
     }
-    
+
     console.log(`🎉 成功初始化 ${sampleDevices.length} 个示例设备`);
-    
   } catch (error) {
     console.error('初始化示例设备失败:', error);
     throw error;

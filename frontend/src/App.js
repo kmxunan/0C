@@ -4,6 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { getTheme } from './theme/mobileTheme';
 import { CssBaseline, Box } from '@mui/material';
 import Layout from './components/Layout';
+import Login from './components/Login';
 import './App.css';
 // 路由懒加载组件
 const DigitalTwinDashboard = React.lazy(() => import('./components/DigitalTwinDashboard'));
@@ -31,9 +32,10 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+  <Routes>
+    <Route path="/login" element={<Login />} />
+    <Route element={<Layout />}>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={
               <React.Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>加载中...</Box>}>
                 <DigitalTwinDashboard />
@@ -115,9 +117,9 @@ function App() {
               </React.Suspense>
             } />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Layout>
-      </Router>
+        </Route>
+      </Routes>
+    </Router>
     </ThemeProvider>
   );
 }

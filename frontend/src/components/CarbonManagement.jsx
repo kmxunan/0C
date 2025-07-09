@@ -317,7 +317,7 @@ const CarbonManagement = () => {
             </Typography>
             <LinearProgress 
               variant="determinate" 
-              value={carbonData.targetProgress} 
+              value={carbonData.targetProgress || 0} 
               sx={{ mt: 1, height: 8, borderRadius: 4 }}
             />
             <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>

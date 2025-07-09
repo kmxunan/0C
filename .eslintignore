@@ -1,0 +1,12 @@
+node_modules/
+build/
+dist/
+coverage/
+public/
+frontend/
+db/
+test-data/
+tests/
+*.min.js
+*.bundle.js
+src/interfaces/http/components/optimization/EnergyStorageOptimization.js

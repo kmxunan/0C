@@ -1,0 +1,300 @@
+# 零碳园区数字孪生系统配置文件
+
+spring:
+  application:
+    name: zero-carbon-digital-twin
+  
+  # 数据源配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/zero_carbon_dt?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    # HikariCP连接池配置
+    hikari:
+      pool-name: ZeroCarbonHikariCP
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      connection-timeout: 30000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+      connection-test-query: SELECT 1
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 25
+          time_zone: Asia/Shanghai
+        order_inserts: true
+        order_updates: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.jcache.JCacheRegionFactory
+        connection:
+          characterEncoding: utf8mb4
+          useUnicode: true
+    open-in-view: false
+  
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+      enabled: true
+  
+  # 缓存配置
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=300s
+  
+  # 国际化配置
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    cache-duration: 3600
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  
+  # Tomcat配置
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 200
+    min-spare-threads: 10
+    max-connections: 8192
+    accept-count: 100
+    connection-timeout: 20000
+  
+  # 错误页面配置
+  error:
+    whitelabel:
+      enabled: false
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.zerocarbon: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/zero-carbon-dt.log
+    max-size: 100MB
+    max-history: 30
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+      show-components: when_authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    os:
+      enabled: true
+
+# 应用程序自定义配置
+app:
+  # 安全配置
+  security:
+    # JWT配置
+    jwt:
+      secret: zero-carbon-digital-twin-jwt-secret-key-2024
+      access-token-expiration: 3600  # 1小时
+      refresh-token-expiration: 86400  # 24小时
+    
+    # 密码策略
+    password:
+      min-length: 8
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special-char: true
+      expiration-days: 90
+    
+    # 账户锁定策略
+    account-lockout:
+      max-attempts: 5
+      lockout-duration-minutes: 30
+      auto-unlock-expired: true
+    
+    # 会话配置
+    session:
+      timeout-hours: 8
+      max-concurrent-sessions: 3
+      cleanup-interval-minutes: 30
+  
+  # 文件存储配置
+  file:
+    upload-path: ./uploads
+    max-size: 10MB
+    allowed-types: jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,zip,rar
+  
+  # 系统配置
+  system:
+    name: 零碳园区数字孪生系统
+    version: 1.0.0
+    description: Zero Carbon Park Digital Twin System
+    contact:
+      name: 系统管理员
+      email: admin@zerocarbon.com
+      phone: 400-000-0000
+  
+  # 数据权限配置
+  data-permission:
+    enabled: true
+    default-scope: DEPARTMENT
+    cache-enabled: true
+    cache-ttl-seconds: 300
+  
+  # 审计日志配置
+  audit:
+    enabled: true
+    retention-days: 90
+    cleanup-interval-hours: 24
+    async-enabled: true
+  
+  # 监控配置
+  monitoring:
+    enabled: true
+    metrics-enabled: true
+    health-check-enabled: true
+    performance-monitoring: true
+
+---
+# 开发环境配置
+spring:
+  profiles: dev
+  
+  datasource:
+    url: jdbc:mysql://localhost:3306/zero_carbon_dt_dev?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: password
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+logging:
+  level:
+    root: DEBUG
+    com.zerocarbon: DEBUG
+
+app:
+  security:
+    jwt:
+      secret: dev-jwt-secret-key
+
+---
+# 测试环境配置
+spring:
+  profiles: test
+  
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  
+  h2:
+    console:
+      enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.zerocarbon: INFO
+
+---
+# 生产环境配置
+spring:
+  profiles: prod
+  
+  datasource:
+    url: jdbc:mysql://prod-db-server:3306/zero_carbon_dt_prod?useUnicode=true&characterEncoding=utf8mb4&useSSL=true&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:prod_user}
+    password: ${DB_PASSWORD:prod_password}
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.zerocarbon: INFO
+  file:
+    name: /var/log/zero-carbon-dt/application.log
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:prod-jwt-secret-key}
+  file:
+    upload-path: ${UPLOAD_PATH:/data/uploads}
+  audit:
+    retention-days: ${AUDIT_RETENTION_DAYS:365}

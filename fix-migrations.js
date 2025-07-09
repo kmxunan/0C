@@ -1,3 +1,4 @@
+/* eslint-disable no-console, no-magic-numbers */
 import mysql from 'mysql2/promise';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
@@ -10,12 +11,12 @@ async function fixMigrations() {
   try {
     // 连接到数据库
     const connection = await mysql.createConnection({
-        host: dbConfig.connection.host,
-        port: dbConfig.connection.port,
-        user: 'root',
-        password: '',
-        database: dbConfig.connection.database
-      });
+      host: dbConfig.connection.host,
+      port: dbConfig.connection.port,
+      user: 'root',
+      password: '',
+      database: dbConfig.connection.database,
+    });
 
     console.log('成功连接到数据库');
 

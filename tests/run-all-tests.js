@@ -8,8 +8,8 @@ import { runAPIIntegrationTests } from './api-integration-test.js';
 import fetch from 'node-fetch';
 import config from '../src/config/index.js';
 
-const BACKEND_URL = 'http://localhost:3000';
-const FRONTEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'http://localhost:1125';
+const FRONTEND_URL = 'http://localhost:7240';
 
 // 颜色输出
 const colors = {
@@ -36,7 +36,7 @@ const testSuites = [
     description: '测试前端界面与后端服务的数据交互',
     script: 'frontend-backend-integration.js',
     dependencies: ['backend', 'frontend'],
-    timeout: 300000, // 5分钟
+    timeout: 112500, // 5分钟
     requiresPuppeteer: true
   },
   {
@@ -46,6 +46,13 @@ const testSuites = [
     dependencies: ['frontend'],
     timeout: 180000, // 3分钟
     requiresPuppeteer: true
+  },
+  {
+    name: '单元测试',
+    description: '测试核心业务逻辑和工具函数',
+    script: 'jest tests/alertService.test.js',
+    dependencies: [],
+    timeout: 60000 // 1分钟
   }
 ];
 
@@ -137,7 +144,7 @@ async function runTestSuite(suite, serviceStatus) {
     const startTime = Date.now();
     
     // 使用spawn运行测试脚本
-    const testProcess = spawn('node', [`tests/${suite.script}`], {
+    const testProcess = spawn('node', suite.script.split(' '), {
       stdio: 'inherit',
       cwd: process.cwd()
     });
@@ -285,7 +292,7 @@ async function runAllTests() {
     // 测试间隔
     if (i < testSuites.length - 1) {
       console.log(`\n${colors.cyan}等待下一个测试...${colors.reset}`);
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1125));
     }
   }
   
@@ -318,8 +325,8 @@ function showHelp() {
   console.log('  node tests/run-all-tests.js --suite api        # 只运行API测试\n');
   
   console.log('前置条件:');
-  console.log('  1. 后端服务运行在端口 3001 (npm start)');
-  console.log('  2. 前端服务运行在端口 3000 (cd frontend && npm start)');
+  console.log('  1. 后端服务运行在端口 7240 (npm start)');
+  console.log('  2. 前端服务运行在端口 1125 (cd frontend && npm start)');
   console.log('  3. 已安装 puppeteer (npm install puppeteer)');
 }
 

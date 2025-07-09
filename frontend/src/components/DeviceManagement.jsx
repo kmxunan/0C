@@ -2,56 +2,35 @@
  * 设备管理组件
  * 提供设备列表、状态监控、配置管理等功能
  */
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
-  IconButton,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Alert,
-  Snackbar,
-  Tooltip,
-  LinearProgress
+  Box, Typography, Button, Alert, Grid, Card, CardContent,
+  LinearProgress, FormControl, InputLabel, Select, MenuItem, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  IconButton, Tooltip, Dialog, DialogActions, DialogContent,
+  DialogTitle, TextField, Snackbar, Chip
 } from '@mui/material';
-import {
-  Add,
-  Edit,
-  Delete,
-  Refresh,
-  Settings,
-  PowerSettingsNew,
-  Warning,
-  CheckCircle,
-  Error,
-  Build,
-  ElectricBolt,
-  Thermostat,
-  Water,
-  Visibility
-} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+
+// 导入所有需要的图标
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
+import SettingsIcon from '@mui/icons-material/Settings';
+import WarningIcon from '@mui/icons-material/Warning';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
+import BuildIcon from '@mui/icons-material/Build';
+import ElectricBoltIcon from '@mui/icons-material/ElectricBolt';
+import ThermostatIcon from '@mui/icons-material/Thermostat';
+import WaterIcon from '@mui/icons-material/Water';
+
+import { API_BASE_URL } from '../apiConfig';
 
 const DeviceManagement = () => {
+  // --- State Hooks ---
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
@@ -68,29 +47,43 @@ const DeviceManagement = () => {
     ratedPower: ''
   });
 
-  useEffect(() => {
-    loadDevices();
-  }, []);
+  const navigate = useNavigate();
 
-  const loadDevices = async () => {
+  // --- Helper Functions ---
+  const showSnackbar = (message, severity) => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  // --- Data Fetching Logic ---
+  // 使用 useCallback 包裹，防止因函数在每次渲染时重新创建而导致 useEffect 无限循环
+  const loadDevices = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch('http://localhost:3001/api/devices', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('获取设备列表失败');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
       }
-      
+
+      const response = await fetch(`${API_BASE_URL}/devices`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.status === 401 || response.status === 403) {
+        console.error('认证失败或令牌已过期，请重新登录。');
+        localStorage.removeItem('token');
+        navigate('/login');
+        throw new Error('认证失败');
+      }
+
+      if (!response.ok) {
+        throw new Error('获取设备列表时发生网络错误');
+      }
+
       const result = await response.json();
-      const devices = result.data || [];
+      const devicesData = result.data || [];
       
-      // 转换数据格式以适配前端显示
-      const formattedDevices = devices.map(device => ({
+      const formattedDevices = devicesData.map(device => ({
         id: device.id,
         name: device.name,
         type: device.type,
@@ -101,10 +94,10 @@ const DeviceManagement = () => {
         serialNumber: device.serial_number || '未知',
         status: device.status === 'online' ? 1 : device.status === 'offline' ? 2 : 0,
         ratedPower: device.rated_power || 0,
-        currentPower: 0, // 需要从实时数据获取
-        efficiency: 0, // 需要计算
+        currentPower: 0, // 占位数据，应从实时接口获取
+        efficiency: 0, // 占位数据，应计算得出
         lastUpdate: device.updated_at || device.created_at,
-        maintenanceRequired: false // 需要从维护系统获取
+        maintenanceRequired: false // 占位数据，应从维护系统获取
       }));
       
       setDevices(formattedDevices);
@@ -114,20 +107,26 @@ const DeviceManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]); // navigate 是稳定的，所以这个函数只会被创建一次
+
+  // --- Effect Hook ---
+  // 在组件挂载时加载设备数据
+  useEffect(() => {
+    loadDevices();
+  }, [loadDevices]); // 依赖于 useCallback 包裹后的 loadDevices
 
   const getStatusChip = (status, maintenanceRequired = false) => {
     if (maintenanceRequired) {
-      return <Chip icon={<Warning />} label="需要维护" color="warning" size="small" />;
+      return <Chip icon={<WarningIcon />} label="需要维护" color="warning" size="small" />;
     }
     
     switch (status) {
       case 1:
-        return <Chip icon={<CheckCircle />} label="在线" color="success" size="small" />;
+        return <Chip icon={<CheckCircleIcon />} label="在线" color="success" size="small" />;
       case 2:
-        return <Chip icon={<Error />} label="离线" color="error" size="small" />;
+        return <Chip icon={<ErrorIcon />} label="离线" color="error" size="small" />;
       case 3:
-        return <Chip icon={<Warning />} label="告警" color="warning" size="small" />;
+        return <Chip icon={<WarningIcon />} label="告警" color="warning" size="small" />;
       default:
         return <Chip label="未知" color="default" size="small" />;
     }
@@ -136,29 +135,24 @@ const DeviceManagement = () => {
   const getDeviceIcon = (category) => {
     switch (category) {
       case 'renewable':
-        return <ElectricBolt color="primary" />;
+        return <ElectricBoltIcon color="primary" />;
       case 'storage':
-        return <PowerSettingsNew color="secondary" />;
+        return <PowerSettingsNewIcon color="secondary" />;
       case 'hvac':
-        return <Thermostat color="info" />;
+        return <ThermostatIcon color="info" />;
       case 'water':
-        return <Water color="primary" />;
+        return <WaterIcon color="primary" />;
       default:
-        return <Build color="action" />;
+        return <BuildIcon color="action" />;
     }
   };
 
+  // --- Event Handlers ---
   const handleAddDevice = () => {
     setSelectedDevice(null);
     setDeviceForm({
-      name: '',
-      type: '',
-      category: '',
-      location: '',
-      manufacturer: '',
-      model: '',
-      serialNumber: '',
-      ratedPower: ''
+      name: '', type: '', category: '', location: '', manufacturer: '',
+      model: '', serialNumber: '', ratedPower: ''
     });
     setOpenDialog(true);
   };
@@ -195,10 +189,16 @@ const DeviceManagement = () => {
         status: 'offline' // 新设备默认离线状态
       };
       
-      let response;
+          const token = localStorage.getItem('token');
+        if (!token) {
+          showSnackbar('未找到身份验证令牌，请重新登录', 'error');
+          setLoading(false);
+          return;
+        }
+        let response;
       if (selectedDevice) {
         // 更新设备
-        response = await fetch(`/api/devices/${selectedDevice.id}`, {
+        response = await fetch(`${API_BASE_URL}/devices/${selectedDevice.id}`, {
           method: 'PATCH',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -208,7 +208,7 @@ const DeviceManagement = () => {
         });
       } else {
         // 添加设备
-        response = await fetch('/api/devices', {
+        response = await fetch(`${API_BASE_URL}/devices`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -237,7 +237,13 @@ const DeviceManagement = () => {
     if (window.confirm('确定要删除这个设备吗？')) {
       try {
         setLoading(true);
-        const response = await fetch(`/api/devices/${deviceId}`, {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          showSnackbar('未找到身份验证令牌，请重新登录', 'error');
+          setLoading(false);
+          return;
+        }
+        const response = await fetch(`${API_BASE_URL}/devices/${deviceId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -260,10 +266,6 @@ const DeviceManagement = () => {
     }
   };
 
-  const showSnackbar = (message, severity) => {
-    setSnackbar({ open: true, message, severity });
-  };
-
   const formatPower = (power) => {
     if (Math.abs(power) >= 1000) {
       return `${(power / 1000).toFixed(1)}kW`;
@@ -280,7 +282,7 @@ const DeviceManagement = () => {
         <Box>
           <Button
             variant="outlined"
-            startIcon={<Refresh />}
+            startIcon={<RefreshIcon />}
             onClick={loadDevices}
             sx={{ mr: 2 }}
           >
@@ -288,7 +290,7 @@ const DeviceManagement = () => {
           </Button>
           <Button
             variant="contained"
-            startIcon={<Add />}
+            startIcon={<AddIcon />}
             onClick={handleAddDevice}
           >
             添加设备
@@ -410,22 +412,22 @@ const DeviceManagement = () => {
                       <TableCell>
                         <Tooltip title="查看详情">
                           <IconButton size="small">
-                            <Visibility />
+                            <VisibilityIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="编辑">
                           <IconButton size="small" onClick={() => handleEditDevice(device)}>
-                            <Edit />
+                            <EditIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="设置">
                           <IconButton size="small">
-                            <Settings />
+                            <SettingsIcon />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="删除">
                           <IconButton size="small" onClick={() => handleDeleteDevice(device.id)}>
-                            <Delete />
+                            <DeleteIcon />
                           </IconButton>
                         </Tooltip>
                       </TableCell>
@@ -549,5 +551,4 @@ const DeviceManagement = () => {
     </Box>
   );
 };
-
 export default DeviceManagement;

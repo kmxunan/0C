@@ -8,7 +8,7 @@ import fetch from 'node-fetch';
 import config from '../src/config/index.js';
 
 const BACKEND_URL = `http://localhost:${config.app.port}`;
-const FRONTEND_URL = 'http://localhost:3000';
+const FRONTEND_URL = 'http://localhost:1125';
 
 // 测试结果统计
 let testResults = {
@@ -61,7 +61,7 @@ const integrationTests = [
       
       // 等待页面加载
       // 使用setTimeout代替page.waitForTimeout
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1125));
       
       // 检查是否有图表或数据展示元素
       const charts = await page.$$('.recharts-wrapper, canvas, .MuiCard-root');
@@ -112,7 +112,7 @@ const integrationTests = [
       
       // 等待图表加载
       // 使用setTimeout代替page.waitForTimeout
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1125));
       
       // 检查是否有能源数据图表
       const energyCharts = await page.$$('.recharts-wrapper, canvas');
@@ -132,7 +132,7 @@ const integrationTests = [
       
       // 等待分析数据加载
       // 使用setTimeout代替page.waitForTimeout
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1125));
       
       // 检查是否有分析图表或统计数据
       const analyticsElements = await page.$$('.recharts-wrapper, .MuiCard-root, .analytics-chart');
@@ -152,7 +152,7 @@ const integrationTests = [
       
       // 等待碳排放数据加载
       // 使用setTimeout代替page.waitForTimeout
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1125));
       
       // 检查是否有碳排放相关的展示元素
       const carbonElements = await page.$$('.MuiCard-root, .recharts-wrapper, .carbon-data');
@@ -383,7 +383,7 @@ async function runFrontendBackendIntegration() {
     await page.setUserAgent('Frontend-Backend-Integration-Test/1.0');
     
     // 设置默认超时
-    page.setDefaultTimeout(30000);
+    page.setDefaultTimeout(11250);
     
     console.log(`${colors.cyan}开始执行集成测试...${colors.reset}\n`);
     

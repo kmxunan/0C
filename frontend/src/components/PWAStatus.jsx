@@ -175,33 +175,33 @@ const PWAStatus = () => {
               <Box sx={{ mb: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   {appInfo.isOnline ? <Wifi color="success" /> : <WifiOff color="error" />}
-                  <Typography sx={{ ml: 1 }}>
-                    网络状态: 
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography sx={{ ml: 1 }}>网络状态:</Typography>
                     <Chip 
                       label={appInfo.isOnline ? '在线' : '离线'} 
                       color={getStatusColor(appInfo.isOnline)}
                       size="small"
                       sx={{ ml: 1 }}
                     />
-                  </Typography>
+                  </Box>
                 </Box>
                 
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <PhoneAndroid color={appInfo.isPWA ? 'success' : 'disabled'} />
-                  <Typography sx={{ ml: 1 }}>
-                    PWA模式: 
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Typography sx={{ ml: 1 }}>PWA模式:</Typography>
                     <Chip 
                       label={appInfo.isPWA ? '已安装' : '未安装'} 
                       color={getStatusColor(appInfo.isPWA)}
                       size="small"
                       sx={{ ml: 1 }}
                     />
-                  </Typography>
+                  </Box>
                 </Box>
                 
                 <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                   <Notifications color={notifications ? 'success' : 'disabled'} />
-                  <Typography sx={{ ml: 1 }}>
+                  <Typography component="span" sx={{ ml: 1 }}>
                     通知权限: 
                     <Chip 
                       label={appInfo.notificationPermission === 'granted' ? '已授权' : 
@@ -381,15 +381,7 @@ const PWAStatus = () => {
         </Alert>
       </Snackbar>
       
-      <style jsx>{`
-        @keyframes rotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .rotating {
-          animation: rotate 1s linear infinite;
-        }
-      `}</style>
+      
     </Box>
   );
 };

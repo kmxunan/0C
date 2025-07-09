@@ -19,8 +19,8 @@ const colors = {
 let authToken = null;
 
 // 测试配置
-const BACKEND_URL = 'http://localhost:3000';
-const FRONTEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'http://localhost:1125';
+const FRONTEND_URL = 'http://localhost:7240';
 
 // 简单的测试用例
 const tests = [
@@ -220,7 +220,7 @@ async function runQuickTest() {
   
   // 检查端口状态
   console.log(`${colors.cyan}📡 检查服务状态...${colors.reset}`);
-  const backendRunning = await checkPort(3000, '后端');
+  const backendRunning = await checkPort(1125, '后端');
   
   if (!backendRunning) {
     console.log(`\n${colors.yellow}⚠️  后端服务未运行，请先启动:${colors.reset}`);
@@ -229,7 +229,7 @@ async function runQuickTest() {
   }
   
   // 检查前端服务状态
-  const frontendRunning = await checkPort(3001, '前端');
+  const frontendRunning = await checkPort(7240, '前端');
   
   // 尝试登录获取认证令牌
   if (backendRunning) {

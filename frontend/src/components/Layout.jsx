@@ -3,7 +3,7 @@
  * 提供导航栏、侧边栏和主内容区域
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Drawer,
@@ -41,15 +41,24 @@ import {
   PhoneAndroid,
   ThreeDRotation
 } from '@mui/icons-material';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
 const drawerWidth = 240;
 
-const Layout = ({ children }) => {
+const Layout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 检查登录状态，如果未登录则重定向到登录页
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    // 如果没有token且当前不在登录页，则重定向
+    if (!token && location.pathname !== '/login') {
+      navigate('/login');
+    }
+  }, [navigate, location.pathname]);
 
   const menuItems = [
     {
@@ -113,8 +122,14 @@ const Layout = ({ children }) => {
   };
 
   const handleProfileMenuClose = () => {
-    setAnchorEl(null);
-  };
+  setAnchorEl(null);
+};
+
+const handleLogout = () => {
+  localStorage.removeItem('token');
+  navigate('/login');
+  handleProfileMenuClose();
+};
 
   const handleNavigation = (path) => {
     navigate(path);
@@ -271,7 +286,7 @@ const Layout = ({ children }) => {
         }}
       >
         <Toolbar />
-        {children}
+        <Outlet />
       </Box>
       
       {/* 用户菜单 */}
@@ -316,7 +331,7 @@ const Layout = ({ children }) => {
           <Settings sx={{ mr: 2 }} /> 账户设置
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleProfileMenuClose}>
+        <MenuItem onClick={handleLogout}>
           <Logout sx={{ mr: 2 }} /> 退出登录
         </MenuItem>
       </Menu>

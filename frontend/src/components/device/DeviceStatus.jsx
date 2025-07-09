@@ -12,12 +12,8 @@ const DeviceStatus = ({ match }) => {
   const [deviceStatus, setDeviceStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [refreshInterval, setRefreshInterval] = useState(30000); // 默认30秒刷新
-  const [timeRange, setTimeRange] = useState('24h');
-  const [dateRange, setDateRange] = useState({
-    start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    end: new Date().toISOString().split('T')[0]
-  });
+  
+ 
   const [sensorHistory, setSensorHistory] = useState([]);
 
   useEffect(() => {
@@ -38,17 +34,9 @@ const DeviceStatus = ({ match }) => {
     const fetchSensorHistory = async () => {
       try {
         setLoading(true);
-        // 根据时间范围计算开始时间
-        let startTime = '';
-        let endTime = new Date().toISOString();
-
-        if (timeRange === 'custom') {
-          startTime = `${dateRange.start}T00:00:00Z`;
-          endTime = `${dateRange.end}T23:59:59Z`;
-        } else {
-          const hours = parseInt(timeRange.replace('h', '')) || 24;
-          startTime = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-        }
+        const hours = 24; // 默认24小时
+        const startTime = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+        const endTime = new Date().toISOString();
 
         const response = await getDeviceHistory(id, {
           startTime,
@@ -65,22 +53,14 @@ const DeviceStatus = ({ match }) => {
       }
     };
 
-    const handleTimeRangeChange = (e) => {
-      setTimeRange(e.target.value);
-    };
-
-    const handleDateChange = (name, value) => {
-      setDateRange(prev => ({...prev, [name]: value}));
-    };
-
     fetchStatus();
     fetchSensorHistory();
     const intervalId = setInterval(() => {
       fetchStatus();
       fetchSensorHistory();
-    }, refreshInterval);
+    }, 30000);
     return () => clearInterval(intervalId);
-  }, [id, refreshInterval]);
+  }, [id]);
 
   if (loading) {
     return (

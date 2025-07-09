@@ -1,0 +1,161 @@
+# 零碳园区数字孪生系统 - Kubernetes存储配置
+
+# StorageClass定义
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: zero-carbon-ssd
+  namespace: zero-carbon-system
+provisioner: kubernetes.io/aws-ebs  # 根据云提供商调整
+parameters:
+  type: gp3
+  fsType: ext4
+  encrypted: "true"
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+---
+# Prometheus持久化存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: zero-carbon-system
+  labels:
+    app: prometheus
+    component: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zero-carbon-ssd
+  resources:
+    requests:
+      storage: 100Gi
+---
+# Grafana持久化存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: zero-carbon-system
+  labels:
+    app: grafana
+    component: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zero-carbon-ssd
+  resources:
+    requests:
+      storage: 10Gi
+---
+# AlertManager持久化存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: alertmanager-pvc
+  namespace: zero-carbon-system
+  labels:
+    app: alertmanager
+    component: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zero-carbon-ssd
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Redis持久化存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: zero-carbon-system
+  labels:
+    app: redis
+    component: cache
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zero-carbon-ssd
+  resources:
+    requests:
+      storage: 20Gi
+---
+# 数据库持久化存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: database-pvc
+  namespace: zero-carbon-system
+  labels:
+    app: database
+    component: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zero-carbon-ssd
+  resources:
+    requests:
+      storage: 200Gi
+---
+# 应用日志存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-logs-pvc
+  namespace: zero-carbon-system
+  labels:
+    app: energy-system
+    component: logs
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: zero-carbon-ssd
+  resources:
+    requests:
+      storage: 50Gi
+---
+# 备份存储
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: backup-pvc
+  namespace: zero-carbon-system
+  labels:
+    component: backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: zero-carbon-ssd
+  resources:
+    requests:
+      storage: 500Gi
+---
+# 本地开发环境存储类（可选）
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: zero-carbon-local
+provisioner: kubernetes.io/host-path
+parameters:
+  type: DirectoryOrCreate
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+---
+# 高性能存储类（用于数据库）
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: zero-carbon-high-performance
+provisioner: kubernetes.io/aws-ebs
+parameters:
+  type: io2
+  iops: "10000"
+  fsType: ext4
+  encrypted: "true"
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain

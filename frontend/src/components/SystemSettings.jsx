@@ -346,7 +346,7 @@ const SystemSettings = () => {
         load: '15%'
       },
       services: [
-        { name: 'API服务', status: 'running', port: 3000 },
+        { name: 'API服务', status: 'running', port: 1125 },
         { name: 'MQTT服务', status: 'running', port: 1883 },
         { name: '数据库', status: 'running', port: 5432 },
         { name: '缓存服务', status: 'running', port: 6379 }

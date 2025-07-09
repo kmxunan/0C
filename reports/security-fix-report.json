@@ -1,0 +1,405 @@
+{
+  "timestamp": "2025-07-06T16:18:03.363Z",
+  "summary": {
+    "totalSecurityIssues": 62,
+    "pathTraversalIssues": 11,
+    "hardcodedSecrets": 0,
+    "sqlInjectionRisks": 3,
+    "xssRisks": 0,
+    "insecureRandomUsage": 48,
+    "weakCryptoUsage": 0,
+    "fixedFiles": 1
+  },
+  "fixedFiles": ["src/shared/middleware/security.js"],
+  "remainingIssues": {
+    "pathTraversal": [
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/shared/config/index.js",
+        "line": 132,
+        "content": "return path.resolve(__dirname, '../../../', value);",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 109,
+        "content": "if (line.includes('../') && !this.isLegitimateImport(line)) {",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 184,
+        "content": "'../src/',",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 185,
+        "content": "'../backend/',",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 186,
+        "content": "'../config/',",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 187,
+        "content": "'../utils/',",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 188,
+        "content": "'../services/',",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 189,
+        "content": "'../middleware/',",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 190,
+        "content": "'../controllers/'",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 193,
+        "content": "'../../../',",
+        "type": "path-traversal"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 194,
+        "content": "'../../../../',",
+        "type": "path-traversal"
+      }
+    ],
+    "hardcodedSecrets": [],
+    "sqlInjection": [
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyAnalytics.js",
+        "line": 4,
+        "content": "// 避免: db.query('SELECT * FROM users WHERE id = ' + userId)",
+        "type": "sql-injection"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyAnalytics.js",
+        "line": 252,
+        "content": "SELECT AVG(value) + 3 * (",
+        "type": "sql-injection"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 273,
+        "content": "// 避免: db.query('SELECT * FROM users WHERE id = ' + userId)",
+        "type": "sql-injection"
+      }
+    ],
+    "xss": [],
+    "insecureRandom": [
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 274,
+        "content": "totalProduction: Math.random() * 1000 * hours,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 275,
+        "content": "totalConsumption: Math.random() * 800 * hours,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 276,
+        "content": "renewableRatio: 60 + Math.random() * 30,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 277,
+        "content": "efficiency: 80 + Math.random() * 15,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 278,
+        "content": "costSavings: Math.random() * 5000",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 282,
+        "content": "production: Math.random() * 100,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 283,
+        "content": "consumption: Math.random() * 80,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 284,
+        "content": "renewable: Math.random() * 60",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 290,
+        "content": "contribution: Math.random() * 100,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 291,
+        "content": "efficiency: 80 + Math.random() * 20",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 441,
+        "content": "energySaved: Math.random() * 50,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 442,
+        "content": "costSaved: Math.random() * 100,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/EnergyManager.js",
+        "line": 443,
+        "content": "efficiencyImproved: Math.random() * 5",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/batteryOptimization.js",
+        "line": 255,
+        "content": "1.2 + Math.random() * 0.3 : // 峰时: 1.2-1.5元",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/batteryOptimization.js",
+        "line": 256,
+        "content": "0.5 + Math.random() * 0.3; // 谷时: 0.5-0.8元",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/batteryOptimization.js",
+        "line": 284,
+        "content": "500 + Math.sin((hour / 24) * Math.PI * 2) * 150 + (Math.random() * 100 - 50);",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/recommendationService.js",
+        "line": 534,
+        "content": "currentConsumption: Math.round(Math.random() * 1000),",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/recommendationService.js",
+        "line": 535,
+        "content": "potentialReduction: Math.round(Math.random() * 30 + 10),",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/recommendationService.js",
+        "line": 585,
+        "content": "const dailySavings = Math.round(Math.random() * 50 + 10);",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/recommendationService.js",
+        "line": 603,
+        "content": "currentCost: Math.round(Math.random() * 1000 + 500),",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/recommendationService.js",
+        "line": 604,
+        "content": "potentialReductionPercent: Math.round(Math.random() * 20 + 5),",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/recommendationService.js",
+        "line": 631,
+        "content": "const monthlySavings = Math.round(Math.random() * 500 + 100);",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/recommendationService.js",
+        "line": 651,
+        "content": "estimatedCost: Math.round(Math.random() * 1000 + 200),",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/recommendationService.js",
+        "line": 652,
+        "content": "estimatedDowntime: Math.round(Math.random() * 4 + 1) // 小时",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/core/services/recommendationService.js",
+        "line": 678,
+        "content": "const potentialCost = Math.round(Math.random() * 5000 + 1000);",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/interfaces/http/DigitalTwinController.js",
+        "line": 194,
+        "content": "const offsetX = (Math.random() - 0.5) * 20;",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/interfaces/http/DigitalTwinController.js",
+        "line": 195,
+        "content": "const offsetZ = (Math.random() - 0.5) * 20;",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/interfaces/http/DigitalTwinController.js",
+        "line": 206,
+        "content": "x: (Math.random() - 0.5) * 100,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/interfaces/http/DigitalTwinController.js",
+        "line": 208,
+        "content": "z: (Math.random() - 0.5) * 100",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/interfaces/http/DigitalTwinController.js",
+        "line": 263,
+        "content": "id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/interfaces/http/components/optimization/EnergyStorageOptimization.js",
+        "line": 108,
+        "content": "const noise = (Math.random() - 0.5) * 0.1;",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/interfaces/http/index.js",
+        "line": 210,
+        "content": "clientId: `${config.mqtt.clientId}-${Math.random().toString(16).substr(2, 8)}`,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/shared/middleware/security.js",
+        "line": 329,
+        "content": "req.get('X-Request-ID') || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/shared/utils/apiResponse.js",
+        "line": 364,
+        "content": "return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/shared/utils/logger.js",
+        "line": 383,
+        "content": "req.headers['x-request-id'] || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/shared/utils/testHelpers.js",
+        "line": 152,
+        "content": "device_id: Math.random() > 0.5 ? `DEV_${faker.random.alphaNumeric(8)}` : null,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/shared/utils/testHelpers.js",
+        "line": 173,
+        "content": "acknowledged_at: Math.random() > 0.5 ? faker.date.recent() : null,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/shared/utils/testHelpers.js",
+        "line": 174,
+        "content": "acknowledged_by: Math.random() > 0.5 ? faker.datatype.number({ min: 1, max: 100 }) : null,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/shared/utils/testHelpers.js",
+        "line": 175,
+        "content": "resolved_at: Math.random() > 0.7 ? faker.date.recent() : null,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/src/shared/utils/testHelpers.js",
+        "line": 176,
+        "content": "resolved_by: Math.random() > 0.7 ? faker.datatype.number({ min: 1, max: 100 }) : null,",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/backend/services/carbonEmissionService.js",
+        "line": 49,
+        "content": "energyUsage: 500 + Math.random() * 500, // 500-1000 kWh",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/backend/services/energyPredictionService.js",
+        "line": 69,
+        "content": "energyUsage: 500 + Math.random() * 500, // 500-1000 kWh",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/backend/services/energyPredictionService.js",
+        "line": 70,
+        "content": "temperature: 20 + Math.random() * 20, // 20-40°C",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/backend/services/energyPredictionService.js",
+        "line": 71,
+        "content": "humidity: 40 + Math.random() * 40 // 40-80%",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/deploy.js",
+        "line": 787,
+        "content": "return `deploy-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 149,
+        "content": "if (line.includes('Math.random()')) {",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 347,
+        "content": "// 替换Math.random()为crypto.randomBytes()（在安全相关场景中）",
+        "type": "insecure-random"
+      },
+      {
+        "file": "/Users/xunan/Documents/WebStormProjects/0C/scripts/security-fixer.js",
+        "line": 348,
+        "content": "if (content.includes('Math.random()') && (content.includes('token') || content.includes('password') || content.includes('secret'))) {",
+        "type": "insecure-random"
+      }
+    ],
+    "weakCrypto": []
+  },
+  "recommendations": [
+    "定期更新依赖包以修复已知漏洞",
+    "使用环境变量存储敏感信息",
+    "实施输入验证和输出编码",
+    "使用参数化查询防止SQL注入",
+    "启用HTTPS和安全头",
+    "定期进行安全审计和渗透测试"
+  ]
+}

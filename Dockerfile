@@ -14,7 +14,7 @@ RUN npm ci --only=production
 COPY . .
 
 # 暴露端口
-EXPOSE 3000
+EXPOSE 1125
 
 # 启动命令
 CMD ["npm", "start"]

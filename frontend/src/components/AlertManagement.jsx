@@ -124,9 +124,21 @@ const AlertManagement = () => {
         ...(filters.severity && { severity: filters.severity })
       });
 
-      const response = await axios.get(`/api/alerts/history?${params}`);
-      setAlertHistory(response.data.data);
-      setPagination(response.data.pagination);
+
+
+      const token = localStorage.getItem('token');
+      const requestHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+console.log('Request headers:', requestHeaders);
+console.log('Headers size:', JSON.stringify(requestHeaders).length);
+try {
+  const response = await axios.get(`/api/alerts/history?${params}`, { headers: requestHeaders });
+  setAlertHistory(response.data.data);
+  setPagination(response.data.pagination);
+} catch (error) {
+  console.error('Fetch alert history error:', error);
+  console.error('Response status:', error.response?.status);
+  console.error('Response headers:', error.response?.headers);
+}
     } catch (error) {
       console.error('获取告警历史失败:', error);
       notification.error({ message: '获取告警历史失败', description: error.response?.data?.error?.message || '服务器错误' });

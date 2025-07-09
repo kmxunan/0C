@@ -1,0 +1,20 @@
+{
+  "timestamp": "2025-07-06T08:56:29.632Z",
+  "duration": 10697,
+  "summary": {
+    "errors": 2,
+    "warnings": 3,
+    "status": "FAIL"
+  },
+  "details": {
+    "errors": [
+      "Prettier检查失败: Command failed: npx prettier --check \"src/**/*.js\" \"tests/**/*.js\" \"*.js\"\n[error] src/core/services/NotificationService.js: SyntaxError: Unexpected token, expected \",\" (170:7)\n[error]   168 |       const result = await db.raw('SELECT id FROM notification_preferences WHERE user_id = ?', [\n[error]   169 |         [preferences.user_id]\n[error] > 170 |       );\n[error]       |       ^\n[error]   171 |       const existing = result.rows ? result.rows[0] : undefined;\n[error]   172 |\n[error]   173 |       const channelsJson = JSON.stringify(preferences.channels);\n",
+      "ESLint检查失败: Command failed: npx eslint \"src/**/*.js\" \"tests/**/*.js\" \"*.js\" --format=json\n\nOops! Something went wrong! :(\n\nESLint: 8.57.1\n\nReferenceError: Cannot read config file: /Users/xunan/Documents/WebStormProjects/0C/.eslintrc.js\nError: module is not defined\n    at file:///Users/xunan/Documents/WebStormProjects/0C/.eslintrc.js:1:1\n    at ModuleJobSync.runSync (node:internal/modules/esm/module_job:400:35)\n    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:427:47)\n    at loadESMFromCJS (node:internal/modules/cjs/loader:1561:24)\n    at Module._compile (node:internal/modules/cjs/loader:1712:5)\n    at Object..js (node:internal/modules/cjs/loader:1895:10)\n    at Module.load (node:internal/modules/cjs/loader:1465:32)\n    at Function._load (node:internal/modules/cjs/loader:1282:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\n"
+    ],
+    "warnings": [
+      "发现敏感文件: /Users/xunan/Documents/WebStormProjects/0C/.env",
+      "发现敏感文件: /Users/xunan/Documents/WebStormProjects/0C/.env.prod",
+      "发现敏感文件: /Users/xunan/Documents/WebStormProjects/0C/frontend/.env"
+    ]
+  }
+}

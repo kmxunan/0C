@@ -1,588 +1,342 @@
-/**
- * 数字孪生仪表板组件
- * 整合3D可视化、能源管理和碳排放监测功能
- */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { Suspense, useState } from 'react';
 import {
   Box,
   Grid,
+  Paper,
+  Typography,
+  CircularProgress,
+  Alert,
   Card,
   CardContent,
-  Typography,
-  Tabs,
-  Tab,
-  Alert,
   Chip,
-  LinearProgress,
   IconButton,
   Tooltip,
   Dialog,
-  DialogTitle,
-  DialogContent,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon
+  DialogContent
 } from '@mui/material';
 import {
-  CheckCircle,
-  Error,
-  Warning,
-  TrendingUp,
-  TrendingDown,
+  Business,
   ElectricBolt,
-  Factory,
+  Co2,
+  Warning,
+  CheckCircle,
   Refresh,
-  Settings,
-  Nature
+  Fullscreen,
+  Close
 } from '@mui/icons-material';
-import {
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-  ResponsiveContainer
-} from 'recharts';
+import { useDigitalTwinStore } from '../stores/digitalTwinStore';
+import FullscreenDigitalTwin from './digital-twin/FullscreenDigitalTwin';
 
-// 模拟导入，实际应用中替换为真实路径
-// import DigitalTwinController from '../../../src/digital-twin/DigitalTwinController.js';
-// import EnergyManager from '../../../src/energy/EnergyManager.js';
-// import CarbonMonitor from '../../../src/carbon/CarbonMonitor.js';
+// 动态导入3D场景组件
+const DigitalTwinViewer = React.lazy(() => import('./DigitalTwinViewer'));
 
-const DigitalTwinDashboard = React.memo(() => {
-  const [activeTab, setActiveTab] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [alerts, setAlerts] = useState([]);
-  const [showAlerts, setShowAlerts] = useState(false);
-  const [energyData, setEnergyData] = useState({
-    realTime: { production: 0, consumption: 0, efficiency: 0 },
-    hourly: [],
-    devices: []
-  });
-  const [carbonData, setCarbonData] = useState({
-    realTime: { totalEmission: 0, reductionRate: 0 },
-    hourly: [],
-    breakdown: []
-  });
-  const [systemStatus, setSystemStatus] = useState({
-    devices: { online: 0, offline: 0, warning: 0 },
-    connectivity: 'connected',
-    lastUpdate: new Date()
-  });
+const DigitalTwinDashboard = () => {
+  const [fullscreenOpen, setFullscreenOpen] = useState(false);
+  const { 
+    campusData, 
+    selectedBuilding, 
+    setSelectedBuilding, 
+    isLoading, 
+    error, 
+    fetchCampusData 
+  } = useDigitalTwinStore();
 
-  const digitalTwinRef = useRef(null);
-  // 模拟控制器引用
-  const controllerRef = useRef(null);
-  const energyManagerRef = useRef(null);
-  const carbonMonitorRef = useRef(null);
-
-  const loadInitialData = useCallback(async () => {
-    // 模拟加载数据
-    const mockEnergyData = {
-      realTime: {
-        production: 850.5,
-        consumption: 720.3,
-        efficiency: 84.7
-      },
-      hourly: Array.from({ length: 24 }, (_, i) => ({
-        hour: `${i}:00`,
-        production: 800 + Math.random() * 200,
-        consumption: 600 + Math.random() * 200,
-        renewable: 400 + Math.random() * 300
-      })),
-      devices: [
-        { id: '1', name: '太阳能板A', type: 'solar', status: 'online', power: 250.5 },
-        { id: '2', name: '风力发电机B', type: 'wind', status: 'online', power: 180.2 },
-        { id: '3', name: '储能系统C', type: 'battery', status: 'charging', power: -120.8 },
-        { id: '4', name: '生产线D', type: 'load', status: 'online', power: 450.3 }
-      ]
-    };
-
-    const mockCarbonData = {
-      realTime: {
-        totalEmission: 125.8,
-        reductionRate: 15.2
-      },
-      hourly: Array.from({ length: 24 }, (_, i) => ({
-        hour: `${i}:00`,
-        emission: 100 + Math.random() * 50,
-        target: 120
-      })),
-      breakdown: [
-        { name: '电力', value: 45.2, color: '#8884d8' },
-        { name: '天然气', value: 32.1, color: '#82ca9d' },
-        { name: '柴油', value: 15.7, color: '#ffc658' },
-        { name: '其他', value: 7.0, color: '#ff7300' }
-      ]
-    };
-
-    setEnergyData(mockEnergyData);
-    setCarbonData(mockCarbonData);
-
-    // 模拟系统状态
-    setSystemStatus({
-      devices: { online: 12, offline: 1, warning: 2 },
-      connectivity: 'connected',
-      lastUpdate: new Date()
-    });
-
-    // 模拟告警
-    setAlerts([
-      {
-        id: '1',
-        level: 'warning',
-        message: '设备温度偏高',
-        device: '生产线D',
-        timestamp: new Date(Date.now() - 5 * 60 * 1000)
-      },
-      {
-        id: '2',
-        level: 'info',
-        message: '储能系统充电完成',
-        device: '储能系统C',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000)
-      }
-    ]);
-  }, []);
-
-  const updateRealTimeData = useCallback(() => {
-    // 模拟实时数据更新
-    setEnergyData(prev => ({
-      ...prev,
-      realTime: {
-        production: 800 + Math.random() * 100,
-        consumption: 650 + Math.random() * 100,
-        efficiency: 80 + Math.random() * 10
-      }
-    }));
-
-    setCarbonData(prev => ({
-      ...prev,
-      realTime: {
-        totalEmission: 120 + Math.random() * 20,
-        reductionRate: 10 + Math.random() * 10
-      }
-    }));
-
-    setSystemStatus(prev => ({
-      ...prev,
-      lastUpdate: new Date()
-    }));
-  }, []);
-
-  useEffect(() => {
-    const initializeSystem = async () => {
-      setIsLoading(true);
-      // 在此可以进行数字孪生控制器、能源管理器等的初始化
-      // controllerRef.current = new DigitalTwinController(digitalTwinRef.current);
-      // energyManagerRef.current = new EnergyManager();
-      // carbonMonitorRef.current = new CarbonMonitor();
-
-      // 注册事件监听 (如果需要)
-      // controllerRef.current.on('dataUpdate', handleDataUpdate);
-
-      await loadInitialData();
-      setIsLoading(false);
-    };
-
-    initializeSystem();
+  // 获取园区统计信息
+  const getStats = () => {
+    if (!campusData) return null;
     
-    // 设置定时器以模拟实时数据更新
-    const interval = setInterval(() => {
-      updateRealTimeData();
-    }, 5000);
-
-    // 清理函数
-    return () => {
-      clearInterval(interval);
-      // 在此执行资源清理，例如断开事件监听
-      // if (controllerRef.current) {
-      //   controllerRef.current.dispose();
-      // }
-    };
-  }, [loadInitialData, updateRealTimeData]);
-  
-  const handleTabChange = useCallback((event, newValue) => {
-    setActiveTab(newValue);
-  }, []);
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'online':
-      case 'charging':
-        return 'success';
-      case 'offline': return 'error';
-      case 'warning': return 'warning';
-      default: return 'default';
-    }
+    const totalBuildings = campusData.buildings?.length || 0;
+    const totalDevices = campusData.devices?.filter(d => d.status === 'active').length || 0;
+    const totalEnergy = campusData.buildings?.reduce((sum, b) => sum + (b.energyConsumption || 0), 0) || 0;
+    const totalCarbon = campusData.buildings?.reduce((sum, b) => sum + (b.carbonEmission || 0), 0) || 0;
+    const alerts = campusData.alerts?.filter(a => a.level === 'high').length || 0;
+    
+    return { totalBuildings, totalDevices, totalEnergy, totalCarbon, alerts };
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'online':
-      case 'charging':
-        return <CheckCircle color="success"/>;
-      case 'offline': return <Error color="error"/>;
-      case 'warning': return <Warning color="warning"/>;
-      default: return null;
-    }
-  };
+  const stats = getStats();
 
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('zh-CN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
+  return (
+    <Box sx={{ flexGrow: 1, p: 3 }}>
+      {/* 页面标题和操作栏 */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" component="h1">
+          园区3D数字孪生视图
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Tooltip title="刷新数据">
+            <IconButton onClick={fetchCampusData} disabled={isLoading}>
+              <Refresh />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="全屏模式">
+            <IconButton onClick={() => setFullscreenOpen(true)}>
+              <Fullscreen />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      </Box>
 
-  const renderOverview = () => (
-    <Grid container spacing={3}>
-      {/* 系统状态卡片 */}
-      <Grid item xs={12} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              系统状态
-            </Typography>
-            <Box display="flex" alignItems="center" mb={1}>
-              <CheckCircle color="success" sx={{ mr: 1 }} />
-              <Typography variant="body2">
-                在线设备: {systemStatus.devices.online}
-              </Typography>
-            </Box>
-            <Box display="flex" alignItems="center" mb={1}>
-              <Warning color="warning" sx={{ mr: 1 }} />
-              <Typography variant="body2">
-                告警设备: {systemStatus.devices.warning}
-              </Typography>
-            </Box>
-            <Box display="flex" alignItems="center" mb={1}>
-              <Error color="error" sx={{ mr: 1 }} />
-              <Typography variant="body2">
-                离线设备: {systemStatus.devices.offline}
-              </Typography>
-            </Box>
-            <Typography variant="caption" color="textSecondary">
-              最后更新: {formatTime(systemStatus.lastUpdate)}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
+      {/* 统计卡片 */}
+      {stats && (
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Business sx={{ fontSize: 40, color: '#2196f3', mb: 1 }} />
+                <Typography variant="h5" component="div">
+                  {stats.totalBuildings}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  建筑数量
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <ElectricBolt sx={{ fontSize: 40, color: '#ff9800', mb: 1 }} />
+                <Typography variant="h5" component="div">
+                  {stats.totalDevices}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  活跃设备
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <ElectricBolt sx={{ fontSize: 40, color: '#4caf50', mb: 1 }} />
+                <Typography variant="h5" component="div">
+                  {stats.totalEnergy.toFixed(1)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  总能耗 (kWh)
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Co2 sx={{ fontSize: 40, color: '#795548', mb: 1 }} />
+                <Typography variant="h5" component="div">
+                  {stats.totalCarbon.toFixed(1)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  碳排放 (kg)
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center' }}>
+                {stats.alerts > 0 ? (
+                  <Warning sx={{ fontSize: 40, color: '#f44336', mb: 1 }} />
+                ) : (
+                  <CheckCircle sx={{ fontSize: 40, color: '#4caf50', mb: 1 }} />
+                )}
+                <Typography variant="h5" component="div">
+                  {stats.alerts}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  高级告警
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
       
-      {/* 能源概览 */}
-      <Grid item xs={12} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              能源概览
-            </Typography>
-            <Box display="flex" alignItems="center" mb={1}>
-              <TrendingUp color="primary" sx={{ mr: 1 }} />
-              <Typography variant="body2">
-                生产: {energyData.realTime.production.toFixed(1)} kW
-              </Typography>
-            </Box>
-            <Box display="flex" alignItems="center" mb={1}>
-              <TrendingDown color="secondary" sx={{ mr: 1 }} />
-              <Typography variant="body2">
-                消耗: {energyData.realTime.consumption.toFixed(1)} kW
-              </Typography>
-            </Box>
-            <Box display="flex" alignItems="center" mb={1}>
-              <ElectricBolt color="action" sx={{ mr: 1 }} />
-              <Typography variant="body2">
-                效率: {energyData.realTime.efficiency.toFixed(1)}%
-              </Typography>
-            </Box>
-            <LinearProgress 
-              variant="determinate" 
-              value={energyData.realTime.efficiency} 
-              sx={{ mt: 1 }}
-            />
-          </CardContent>
-        </Card>
-      </Grid>
-      
-      {/* 碳排放概览 */}
-      <Grid item xs={12} md={3}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              碳排放概览
-            </Typography>
-            <Box display="flex" alignItems="center" mb={1}>
-              <Factory color="disabled" sx={{ mr: 1 }} />
-              <Typography variant="body2">
-                当前排放: {carbonData.realTime.totalEmission.toFixed(1)} kgCO₂e
-              </Typography>
-            </Box>
-            <Box display="flex" alignItems="center" mb={1}>
-              <Nature color="success" sx={{ mr: 1 }} />
-              <Typography variant="body2">
-                减排率: {carbonData.realTime.reductionRate.toFixed(1)}%
-              </Typography>
-            </Box>
-            <LinearProgress 
-              variant="determinate" 
-              value={carbonData.realTime.reductionRate} 
-              color="success"
-              sx={{ mt: 1 }}
-            />
-          </CardContent>
-        </Card>
-      </Grid>
-      
-      {/* 告警中心 */}
-      <Grid item xs={12} md={3}>
-        <Card>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6">
-                告警中心
+      <Grid container spacing={3}>
+        {/* 3D场景区域 */}
+        <Grid item xs={12} lg={8}>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              height: 600,
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography component="h2" variant="h6" color="primary">
+                园区3D模型
               </Typography>
               <Chip 
-                label={alerts.length} 
-                color={alerts.length > 0 ? 'warning' : 'success'}
+                label={isLoading ? '加载中...' : error ? '连接错误' : '实时数据'}
+                color={isLoading ? 'default' : error ? 'error' : 'success'}
                 size="small"
               />
             </Box>
-            {alerts.slice(0, 3).map(alert => (
-              <Alert 
-                key={alert.id}
-                severity={alert.level}
-                icon={false}
-                sx={{ mb: 1, fontSize: '0.8rem', alignItems: 'center' }}
-              >
-                {alert.message}
-              </Alert>
-            ))}
-            {alerts.length > 3 && (
-              <Typography 
-                variant="caption" 
-                color="primary" 
-                sx={{ cursor: 'pointer' }}
-                onClick={() => setShowAlerts(true)}
-              >
-                查看更多 ({alerts.length - 3})
-              </Typography>
-            )}
-          </CardContent>
-        </Card>
-      </Grid>
-      
-      {/* 3D数字孪生视图 */}
-      <Grid item xs={12}>
-        <Card>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6">
-                数字孪生3D视图
-              </Typography>
-              <Box>
-                <Tooltip title="刷新数据">
-                  <IconButton onClick={updateRealTimeData}>
-                    <Refresh />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="视图设置">
-                  <IconButton>
-                    <Settings />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-            <Box 
-              ref={digitalTwinRef}
-              sx={{ 
-                height: 500, 
-                backgroundColor: '#e0e0e0',
-                borderRadius: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              {isLoading ? (
-                <Typography color="textSecondary">正在加载3D场景...</Typography>
+            <Box sx={{ flexGrow: 1, position: 'relative' }}>
+              {error ? (
+                <Alert severity="error" sx={{ height: '100%', display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="h6">数字孪生加载失败</Typography>
+                  <Typography variant="body2">{error}</Typography>
+                </Alert>
               ) : (
-                <Typography color="textSecondary">3D数字孪生场景将在此处显示</Typography>
+                <Suspense fallback={
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      justifyContent: 'center', 
+                      alignItems: 'center', 
+                      height: '100%',
+                      gap: 2
+                    }}
+                  >
+                    <CircularProgress size={60} />
+                    <Typography variant="h6" color="text.secondary">
+                      正在加载3D场景...
+                    </Typography>
+                  </Box>
+                }>
+                  <DigitalTwinViewer 
+                    selectedBuilding={selectedBuilding}
+                    onBuildingSelect={setSelectedBuilding}
+                  />
+                </Suspense>
               )}
             </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
-  );
+          </Paper>
+        </Grid>
+        
+        {/* 信息面板区域 */}
+        <Grid item xs={12} lg={4}>
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              height: 600,
+            }}
+          >
+            <Typography component="h2" variant="h6" color="primary" gutterBottom>
+              建筑详细信息
+            </Typography>
+            <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+              {selectedBuilding && campusData?.buildings ? (
+                (() => {
+                  const building = campusData.buildings.find(b => b.id === selectedBuilding);
+                  return building ? (
+                    <Box>
+                      <Typography variant="h6" gutterBottom sx={{ color: '#2196f3' }}>
+                        {building.name || '未命名建筑'}
+                      </Typography>
+                      
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" gutterBottom>基本信息</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          类型: {building.type || '办公楼'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          楼层: {building.floors || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          面积: {building.area || 'N/A'} m²
+                        </Typography>
+                      </Box>
 
-  const renderEnergyManagement = () => (
-    <Grid container spacing={3}>
-      {/* 实时能源数据 */}
-      <Grid item xs={12} lg={8}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              24小时能源趋势
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={energyData.hourly}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" />
-                <YAxis />
-                <RechartsTooltip />
-                <Legend />
-                <Line type="monotone" dataKey="production" stroke="#8884d8" name="生产" />
-                <Line type="monotone" dataKey="consumption" stroke="#82ca9d" name="消耗" />
-                <Line type="monotone" dataKey="renewable" stroke="#ffc658" name="可再生" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </Grid>
-      
-      {/* 设备状态 */}
-      <Grid item xs={12} lg={4}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              设备状态
-            </Typography>
-            <List sx={{ maxHeight: 300, overflow: 'auto' }}>
-              {energyData.devices.map(device => (
-                <ListItem key={device.id} disablePadding>
-                  <ListItemIcon sx={{ minWidth: '40px' }}>
-                    {getStatusIcon(device.status)}
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={device.name}
-                    secondary={`${device.power.toFixed(1)} kW`}
-                  />
-                  <Chip 
-                    label={device.status}
-                    color={getStatusColor(device.status)}
-                    size="small"
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
-  );
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" gutterBottom>能耗数据</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          当前功率: {building.currentPower || 0} kW
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          日能耗: {building.dailyConsumption || 0} kWh
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          月能耗: {building.monthlyConsumption || 0} kWh
+                        </Typography>
+                      </Box>
 
-  const renderCarbonMonitoring = () => (
-    <Grid container spacing={3}>
-      {/* 碳排放趋势 */}
-      <Grid item xs={12} lg={8}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              24小时碳排放趋势
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={carbonData.hourly}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" />
-                <YAxis />
-                <RechartsTooltip />
-                <Legend />
-                <Area type="monotone" dataKey="emission" stackId="1" stroke="#ff7300" fill="#ff7300" name="实际排放" />
-                <Area type="monotone" dataKey="target" stackId="1" stroke="#82ca9d" fill="#82ca9d" name="目标排放" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </Grid>
-      
-      {/* 排放源分布 */}
-      <Grid item xs={12} lg={4}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              排放源分布
-            </Typography>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={carbonData.breakdown}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {carbonData.breakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <RechartsTooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
-  );
+                      <Box sx={{ mb: 2 }}>
+                        <Typography variant="subtitle2" gutterBottom>环境数据</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          温度: {building.temperature || 'N/A'}°C
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          湿度: {building.humidity || 'N/A'}%
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          空气质量: {building.airQuality || 'N/A'}
+                        </Typography>
+                      </Box>
 
-  return (
-    <Box sx={{ width: '100%', p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        零碳园区数字孪生管理系统
-      </Typography>
-      
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={activeTab} onChange={handleTabChange} aria-label="dashboard tabs">
-          <Tab label="系统概览" id="tab-0" aria-controls="tabpanel-0" />
-          <Tab label="能源管理" id="tab-1" aria-controls="tabpanel-1" />
-          <Tab label="碳排放监测" id="tab-2" aria-controls="tabpanel-2" />
-        </Tabs>
-      </Box>
-      
-      <Box hidden={activeTab !== 0} id="tabpanel-0" aria-labelledby="tab-0">
-        {activeTab === 0 && renderOverview()}
-      </Box>
-      <Box hidden={activeTab !== 1} id="tabpanel-1" aria-labelledby="tab-1">
-        {activeTab === 1 && renderEnergyManagement()}
-      </Box>
-      <Box hidden={activeTab !== 2} id="tabpanel-2" aria-labelledby="tab-2">
-        {activeTab === 2 && renderCarbonMonitoring()}
-      </Box>
-      
-      {/* 告警对话框 */}
-      <Dialog open={showAlerts} onClose={() => setShowAlerts(false)} maxWidth="md" fullWidth>
-        <DialogTitle>系统告警</DialogTitle>
-        <DialogContent>
-          <List>
-            {alerts.map(alert => (
-              <ListItem key={alert.id}>
-                <ListItemIcon>
-                  {alert.level === 'warning' ? <Warning color="warning" /> : <CheckCircle color="info" />}
-                </ListItemIcon>
-                <ListItemText
-                  primary={alert.message}
-                  secondary={`设备: ${alert.device} | 时间: ${formatTime(alert.timestamp)}`}
-                />
-              </ListItem>
-            ))}
-          </List>
+                      <Box>
+                        <Typography variant="subtitle2" gutterBottom>运行状态</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          {building.status === 'normal' ? (
+                            <CheckCircle sx={{ fontSize: 16, color: '#4caf50', mr: 1 }} />
+                          ) : (
+                            <Warning sx={{ fontSize: 16, color: '#ff9800', mr: 1 }} />
+                          )}
+                          <Typography variant="body2" color="text.secondary">
+                            {building.status === 'normal' ? '正常运行' : '需要关注'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      建筑信息未找到
+                    </Typography>
+                  );
+                })()
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Business sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    请点击3D场景中的建筑物查看详细信息
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* 全屏数字孪生对话框 */}
+      <Dialog
+        open={fullscreenOpen}
+        onClose={() => setFullscreenOpen(false)}
+        maxWidth={false}
+        fullScreen
+        PaperProps={{
+          sx: {
+            backgroundColor: 'transparent',
+            boxShadow: 'none'
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0, position: 'relative' }}>
+          <FullscreenDigitalTwin onClose={() => setFullscreenOpen(false)} />
+          <IconButton
+            onClick={() => setFullscreenOpen(false)}
+            sx={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              color: 'white',
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              zIndex: 2000,
+              '&:hover': {
+                backgroundColor: 'rgba(0,0,0,0.7)'
+              }
+            }}
+          >
+            <Close />
+          </IconButton>
         </DialogContent>
       </Dialog>
     </Box>
   );
-});
+};
 
 export default DigitalTwinDashboard;

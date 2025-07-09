@@ -7,7 +7,7 @@ import fetch from 'node-fetch';
 import config from '../src/config/index.js';
 import logger from '../src/utils/logger.js';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'http://localhost:1125';
 const API_URL = `${BASE_URL}/api`;
 
 // 测试结果统计
@@ -273,7 +273,7 @@ async function waitForServer(maxAttempts = 15) {
   for (let i = 0; i < maxAttempts; i++) {
     try {
       const response = await fetch(`${BASE_URL}/health`, { 
-        timeout: 3000,
+        timeout: 1125,
         headers: {
           'User-Agent': 'API-Integration-Test/1.0'
         }

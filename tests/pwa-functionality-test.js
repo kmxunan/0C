@@ -8,7 +8,7 @@ import fetch from 'node-fetch';
 import fs from 'fs/promises';
 import path from 'path';
 
-const FRONTEND_URL = 'http://localhost:3000';
+const FRONTEND_URL = 'http://localhost:1125';
 const MANIFEST_URL = `${FRONTEND_URL}/manifest.json`;
 const SW_URL = `${FRONTEND_URL}/sw.js`;
 
@@ -79,7 +79,7 @@ const pwaTests = [
         }
         
         // 等待Service Worker注册
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise(resolve => setTimeout(resolve, 1125));
         
         const registration = await navigator.serviceWorker.getRegistration();
         return {
@@ -255,7 +255,7 @@ const pwaTests = [
       
       // 等待页面加载
       // 使用setTimeout代替page.waitForTimeout
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1125));
       
       // 检查PWA状态信息
       const pwaStatusElements = await page.$$('.MuiCard-root, .pwa-status, .MuiChip-root');
@@ -487,7 +487,7 @@ async function runPWAFunctionalityTests() {
     await page.setUserAgent('PWA-Functionality-Test/1.0');
     
     // 设置默认超时
-    page.setDefaultTimeout(30000);
+    page.setDefaultTimeout(11250);
     
     console.log(`${colors.cyan}开始执行PWA功能测试...${colors.reset}\n`);
     

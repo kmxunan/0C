@@ -1,23 +1,37 @@
 # 零碳园区数字孪生能碳管理系统 API 接口文档
+
 ## 1. 引言
+
 ### 1.1 目的
+
 本文档旨在为开发者提供零碳园区数字孪生能碳管理系统的API接口使用说明。通过这些接口，外部系统或应用可以与核心能碳管理系统进行数据交互，实现数据查询、设备控制、告警推送等功能，促进园区内各系统间的协同工作。
+
 ### 1.2 目标用户
+
 - 后端开发工程师
 - 前端开发工程师
 - 系统集成商
 - 需要接入园区能碳数据的第三方应用开发者
+
 ### 1.3 接口风格
+
 本系统API采用RESTful风格设计，使用HTTP协议进行通信。数据传输格式主要采用JSON。
+
 ### 1.4 授权认证
+
 所有API接口均需要进行身份验证。采用基于Token的认证方式（如Bearer Token），客户端在首次访问时获取Token，后续每次请求需在Header中携带该Token。
 **认证Header格式:**
+
 ```
 Authorization: Bearer <access_token>
 ```
+
 ### 1.5 基础URL
+
 所有接口URL均为相对路径，实际调用时需拼接基础URL。例如，基础URL为 `https://api.zerocarbonpark.com/v1`。
+
 ### 1.6 错误处理
+
 接口返回的HTTP状态码表示请求的处理结果。常见状态码及含义如下：
 | 状态码 | 含义 |
 | --- | --- |
@@ -30,6 +44,7 @@ Authorization: Bearer <access_token>
 | 404 Not Found | 请求的资源不存在。 |
 | 500 Internal Server Error | 服务器内部错误。 |
 详细的错误信息会在响应体中以JSON格式返回，结构如下：
+
 ```json
 {
   "error": {
@@ -39,8 +54,11 @@ Authorization: Bearer <access_token>
   }
 }
 ```
+
 ## 2. 数据模型
+
 ### 2.1 设备(Device)
+
 ```json
 {
   "id": "设备唯一标识符",
@@ -63,7 +81,9 @@ Authorization: Bearer <access_token>
   }
 }
 ```
+
 ### 2.2 能源数据(EnergyData)
+
 ```json
 {
   "id": "数据记录ID",
@@ -75,7 +95,9 @@ Authorization: Bearer <access_token>
   "quality": "数据质量（如：良好、可疑、错误）"
 }
 ```
+
 ### 2.3 碳排放数据(CarbonData)
+
 ```json
 {
   "id": "数据记录ID",
@@ -87,7 +109,9 @@ Authorization: Bearer <access_token>
   "calculation_method": "计算方法（如：基于活动数据、基于投入产出）"
 }
 ```
+
 ### 2.4 告警(Alert)
+
 ```json
 {
   "id": "告警ID",
@@ -101,7 +125,9 @@ Authorization: Bearer <access_token>
   "resolved_at": "处理时间（可选）"
 }
 ```
+
 ### 2.5 场景/策略(Scenario/Strategy)
+
 ```json
 {
   "id": "策略ID",
@@ -117,9 +143,13 @@ Authorization: Bearer <access_token>
   "updated_at": "更新时间"
 }
 ```
+
 ## 3. API 接口列表
+
 ### 3.1 设备管理
+
 #### 3.1.1 获取所有设备列表
+
 - **URL:** `/devices`
 - **Method:** `GET`
 - **Headers:**
@@ -164,7 +194,9 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 #### 3.1.2 获取单个设备详情
+
 - **URL:** `/devices/{device_id}`
 - **Method:** `GET`
 - **Headers:**
@@ -193,7 +225,9 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 #### 3.1.3 创建新设备
+
 - **URL:** `/devices`
 - **Method:** `POST`
 - **Headers:**
@@ -237,7 +271,9 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 #### 3.1.4 更新设备信息
+
 - **URL:** `/devices/{device_id}`
 - **Method:** `PUT`
 - **Headers:**
@@ -264,7 +300,9 @@ Authorization: Bearer <access_token>
   }
   ```
 - **Response (404 Not Found):** (同3.1.2)
+
 #### 3.1.5 删除设备
+
 - **URL:** `/devices/{device_id}`
 - **Method:** `DELETE`
 - **Headers:**
@@ -275,8 +313,11 @@ Authorization: Bearer <access_token>
   - `device_id`: 设备的唯一标识符。
 - **Response (204 No Content):** 成功删除，无返回内容。
 - **Response (404 Not Found):** (同3.1.2)
+
 ### 3.2 能源数据管理
+
 #### 3.2.1 获取设备能源数据（按时间范围）
+
 - **URL:** `/energy-data`
 - **Method:** `GET`
 - **Headers:**
@@ -313,7 +354,9 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 #### 3.2.2 推送实时能源数据（设备端调用）
+
 - **URL:** `/energy-data/realtime`
 - **Method:** `POST`
 - **Headers:**
@@ -350,8 +393,11 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 ### 3.3 碳排放数据管理
+
 #### 3.3.1 获取碳排放数据（按时间范围）
+
 - **URL:** `/carbon-data`
 - **Method:** `GET`
 - **Headers:**
@@ -379,7 +425,9 @@ Authorization: Bearer <access_token>
     ]
   }
   ```
+
 #### 3.3.2 获取园区总碳排放统计
+
 - **URL:** `/carbon-data/total`
 - **Method:** `GET`
 - **Headers:**
@@ -401,8 +449,11 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 ### 3.4 告警管理
+
 #### 3.4.1 获取告警列表
+
 - **URL:** `/alerts`
 - **Method:** `GET`
 - **Headers:**
@@ -437,7 +488,9 @@ Authorization: Bearer <access_token>
     "page_size": 10
   }
   ```
+
 #### 3.4.2 标记告警为已解决
+
 - **URL:** `/alerts/{alert_id}/resolve`
 - **Method:** `POST`
 - **Headers:**
@@ -474,8 +527,11 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 ### 3.5 场景/策略管理
+
 #### 3.5.1 获取所有策略列表
+
 - **URL:** `/strategies`
 - **Method:** `GET`
 - **Headers:**
@@ -499,7 +555,9 @@ Authorization: Bearer <access_token>
     ]
   }
   ```
+
 #### 3.5.2 启用/禁用策略
+
 - **URL:** `/strategies/{strategy_id}/toggle`
 - **Method:** `POST`
 - **Headers:**
@@ -524,7 +582,9 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 #### 3.5.3 执行策略（手动触发）
+
 - **URL:** `/strategies/{strategy_id}/execute`
 - **Method:** `POST`
 - **Headers:**
@@ -559,8 +619,11 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 ### 3.6 数字孪生服务
+
 #### 3.6.1 获取园区实时数字孪生状态快照
+
 - **URL:** `/twin/snapshot`
 - **Method:** `GET`
 - **Headers:**
@@ -580,12 +643,20 @@ Authorization: Bearer <access_token>
       "energy_balance": "surplus",
       "carbon_status": "neutral"
     },
-    "devices": [ /* 设备状态列表，简化 */ ],
-    "energy": [ /* 能源数据列表，简化 */ ],
-    "carbon": [ /* 碳排放数据列表，简化 */ ]
+    "devices": [
+      /* 设备状态列表，简化 */
+    ],
+    "energy": [
+      /* 能源数据列表，简化 */
+    ],
+    "carbon": [
+      /* 碳排放数据列表，简化 */
+    ]
   }
   ```
+
 #### 3.6.2 获取园区数字孪生模型信息
+
 - **URL:** `/twin/model`
 - **Method:** `GET`
 - **Headers:**
@@ -604,20 +675,35 @@ Authorization: Bearer <access_token>
     }
   }
   ```
+
 ## 4. 附录
+
 ### 4.1 完整数据模型定义
+
 （此处应包含更详细的数据模型定义，包括所有字段的数据类型、约束等。）
+
 ### 4.2 完整ER图
+
 （此处应包含系统的实体关系图。）
+
 ### 4.3 数据流程图
+
 （此处应包含关键业务流程的数据流向图。）
+
 ### 4.4 数据模型图
+
 （此处应包含更直观的数据模型图，如PlantUML或Mermaid图。）
+
 ### 4.5 数据安全策略详情
+
 （此处应包含更详细的数据安全措施，如数据加密、访问控制策略等。）
+
 ### 4.6 数据备份方案详情
+
 （此处应包含具体的备份频率、存储位置、恢复流程等。）
+
 ### 4.7 数据恢复方案详情
-（此处应包含不同场景下的数据恢复步骤和验证方法。）
----
+
+## （此处应包含不同场景下的数据恢复步骤和验证方法。）
+
 **注意：** 这只是一个API接口文档的框架和示例，实际开发中需要根据具体业务需求进行详细设计和补充。例如，需要定义更详细的错误代码、请求/响应示例、分页逻辑、过滤条件等。同时，对于性能敏感的接口，可能需要考虑缓存策略。

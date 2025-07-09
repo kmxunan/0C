@@ -1,25 +1,26 @@
+/* eslint-disable no-console, no-magic-numbers */
 import fetch from 'node-fetch';
 
 async function testLogin() {
   try {
     console.log('尝试登录...');
-    
-    const response = await fetch('http://localhost:3000/api/auth/login', {
+
+    const response = await fetch('http://localhost:1125/api/auth/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         username: 'admin',
-        password: 'admin123'
-      })
+        password: 'admin123',
+      }),
     });
-    
+
     console.log('状态码:', response.status);
-    
+
     const contentType = response.headers.get('content-type');
     console.log('Content-Type:', contentType);
-    
+
     if (contentType && contentType.includes('application/json')) {
       const data = await response.json();
       console.log('响应数据:', JSON.stringify(data, null, 2));

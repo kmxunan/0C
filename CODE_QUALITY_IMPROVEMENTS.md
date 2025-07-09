@@ -7,11 +7,13 @@
 ## 🔧 已完成的修复
 
 ### 1. 性能监控模块修复 ✅
+
 - **问题**: `activeConnections` 变量未定义导致运行时错误
 - **解决方案**: 已添加全局连接数跟踪和相关中间件
 - **状态**: 已修复并通过测试验证
 
 ### 2. 路由配置修复 ✅
+
 - **问题**: `/api/performance/metrics` 路由未正确挂载
 - **解决方案**: 在 `index.js` 中正确调用 `setupPerformanceRoutes`
 - **状态**: 已修复并通过测试验证
@@ -23,6 +25,7 @@
 **当前状态**: 系统已经具备基本的模块化结构，但仍有改进空间。
 
 **建议的目录结构优化**:
+
 ```
 src/
 ├── core/                    // 核心业务逻辑
@@ -87,11 +90,13 @@ container.register('energyService', (c) => new EnergyService(c.get('database')))
 ### 3. 错误处理标准化
 
 **当前问题**:
+
 - 缺乏统一的错误处理机制
 - 错误信息不够详细
 - 没有错误分类和日志记录
 
 **建议改进**:
+
 ```javascript
 // 增强 src/utils/errorHandler.js
 class AppError extends Error {
@@ -119,7 +124,7 @@ class DatabaseError extends AppError {
 
 const errorHandler = (err, req, res, next) => {
   const { statusCode = 500, message, errorCode, details } = err;
-  
+
   // 结构化错误日志
   logger.error('API Error', {
     errorCode: errorCode || 'UNKNOWN_ERROR',
@@ -129,18 +134,17 @@ const errorHandler = (err, req, res, next) => {
     method: req.method,
     ip: req.ip,
     userAgent: req.get('User-Agent'),
-    stack: err.stack
+    stack: err.stack,
   });
-  
+
   res.status(statusCode).json({
     success: false,
     error: {
       code: errorCode || 'INTERNAL_SERVER_ERROR',
-      message: process.env.NODE_ENV === 'production' ? 
-        getProductionMessage(statusCode) : message,
+      message: process.env.NODE_ENV === 'production' ? getProductionMessage(statusCode) : message,
       timestamp: new Date().toISOString(),
-      ...(process.env.NODE_ENV !== 'production' && { details })
-    }
+      ...(process.env.NODE_ENV !== 'production' && { details }),
+    },
   });
 };
 ```
@@ -195,11 +199,7 @@ export class EnergyService {
 ```json
 // .eslintrc.json
 {
-  "extends": [
-    "eslint:recommended",
-    "@typescript-eslint/recommended",
-    "prettier"
-  ],
+  "extends": ["eslint:recommended", "@typescript-eslint/recommended", "prettier"],
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "security"],
   "rules": {
@@ -272,13 +272,7 @@ CREATE INDEX idx_energy_timestamp_desc ON energy_data(timestamp DESC);
 // 使用分页和限制
 class EnergyRepository {
   async getEnergyData(options = {}) {
-    const {
-      limit = 100,
-      offset = 0,
-      startTime,
-      endTime,
-      sources
-    } = options;
+    const { limit = 100, offset = 0, startTime, endTime, sources } = options;
 
     let query = `
       SELECT * FROM energy_data 
@@ -321,7 +315,7 @@ class EnergyRepository {
       WHERE timestamp BETWEEN ? AND ?
       GROUP BY source
     `;
-    
+
     return this.database.all(query, [timeRange.startTime, timeRange.endTime]);
   }
 }
@@ -368,19 +362,19 @@ class RedisCache {
 
 // 缓存装饰器
 function cached(ttl = 3600, keyGenerator = null) {
-  return function(target, propertyName, descriptor) {
+  return function (target, propertyName, descriptor) {
     const method = descriptor.value;
-    descriptor.value = async function(...args) {
-      const cacheKey = keyGenerator ? 
-        keyGenerator(target.constructor.name, propertyName, args) :
-        `${target.constructor.name}:${propertyName}:${JSON.stringify(args)}`;
-      
+    descriptor.value = async function (...args) {
+      const cacheKey = keyGenerator
+        ? keyGenerator(target.constructor.name, propertyName, args)
+        : `${target.constructor.name}:${propertyName}:${JSON.stringify(args)}`;
+
       let result = await this.cache.get(cacheKey);
       if (!result) {
         result = await method.apply(this, args);
         await this.cache.set(cacheKey, result, ttl);
       }
-      
+
       return result;
     };
   };
@@ -410,12 +404,12 @@ class DataProcessor {
 
   async addData(data) {
     this.queue.push(data);
-    
+
     // 设置最大等待时间
     if (!this.timer) {
       this.timer = setTimeout(() => this.processBatch(), this.maxWaitTime);
     }
-    
+
     // 达到批次大小立即处理
     if (this.queue.length >= this.batchSize && !this.processing) {
       await this.processBatch();
@@ -424,26 +418,28 @@ class DataProcessor {
 
   async processBatch() {
     if (this.processing || this.queue.length === 0) return;
-    
+
     this.processing = true;
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
     }
-    
+
     const batch = this.queue.splice(0, this.batchSize);
-    
+
     try {
       await this.database.transaction(async (tx) => {
-        const stmt = tx.prepare('INSERT INTO energy_data (timestamp, consumption, production, source) VALUES (?, ?, ?, ?)');
-        
+        const stmt = tx.prepare(
+          'INSERT INTO energy_data (timestamp, consumption, production, source) VALUES (?, ?, ?, ?)'
+        );
+
         for (const item of batch) {
           await stmt.run([item.timestamp, item.consumption, item.production, item.source]);
         }
-        
+
         await stmt.finalize();
       });
-      
+
       logger.info('Batch processed successfully', { batchSize: batch.length });
     } catch (error) {
       logger.error('Batch processing failed', { error: error.message, batchSize: batch.length });
@@ -451,7 +447,7 @@ class DataProcessor {
       this.handleFailedBatch(batch);
     } finally {
       this.processing = false;
-      
+
       // 如果还有数据，继续处理
       if (this.queue.length > 0) {
         setTimeout(() => this.processBatch(), 100);
@@ -480,7 +476,7 @@ const energyDataSchema = Joi.object({
   production: Joi.number().min(0).max(10000).required(),
   source: Joi.string().valid('solar', 'wind', 'grid', 'battery').required(),
   buildingId: Joi.string().uuid().optional(),
-  metadata: Joi.object().optional()
+  metadata: Joi.object().optional(),
 });
 
 class EnergyDataValidator {
@@ -488,19 +484,19 @@ class EnergyDataValidator {
     const { error, value } = energyDataSchema.validate(data, {
       abortEarly: false,
       stripUnknown: true,
-      convert: true
+      convert: true,
     });
-    
+
     if (error) {
       throw new ValidationError(
         '数据验证失败',
-        error.details.map(d => ({
+        error.details.map((d) => ({
           field: d.path.join('.'),
-          message: d.message
+          message: d.message,
         }))
       );
     }
-    
+
     return value;
   }
 
@@ -535,7 +531,7 @@ class SecureDatabase {
     this.allowedTables = new Set(['energy_data', 'carbon_emissions', 'battery_status']);
     this.allowedColumns = new Map([
       ['energy_data', new Set(['id', 'timestamp', 'consumption', 'production', 'source'])],
-      ['carbon_emissions', new Set(['id', 'date', 'amount', 'building_id'])]
+      ['carbon_emissions', new Set(['id', 'date', 'amount', 'building_id'])],
     ]);
   }
 
@@ -544,7 +540,7 @@ class SecureDatabase {
     if (this.containsDynamicSQL(sql)) {
       throw new SecurityError('检测到动态SQL构建，存在安全风险');
     }
-    
+
     return this.db.all(sql, params);
   }
 
@@ -555,8 +551,8 @@ class SecureDatabase {
     }
 
     const allowedCols = this.allowedColumns.get(table);
-    const validColumns = columns.filter(col => allowedCols.has(col));
-    
+    const validColumns = columns.filter((col) => allowedCols.has(col));
+
     if (validColumns.length === 0) {
       throw new SecurityError('没有有效的列名');
     }
@@ -596,15 +592,15 @@ class SecureDatabase {
 
   containsDynamicSQL(sql) {
     const dangerousPatterns = [
-      /\$\{.*\}/,      // 模板字符串
-      /\+.*\+/,        // 字符串拼接
-      /concat\(/i,     // CONCAT函数
+      /\$\{.*\}/, // 模板字符串
+      /\+.*\+/, // 字符串拼接
+      /concat\(/i, // CONCAT函数
       /union\s+select/i, // UNION注入
-      /;\s*drop\s+/i,  // DROP语句
-      /;\s*delete\s+/i // DELETE语句
+      /;\s*drop\s+/i, // DROP语句
+      /;\s*delete\s+/i, // DELETE语句
     ];
-    
-    return dangerousPatterns.some(pattern => pattern.test(sql));
+
+    return dangerousPatterns.some((pattern) => pattern.test(sql));
   }
 }
 ```
@@ -629,10 +625,10 @@ const createRateLimiter = (windowMs, max, message) => {
       logger.warn('Rate limit exceeded', {
         ip: req.ip,
         url: req.url,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get('User-Agent'),
       });
       res.status(429).json({ error: message });
-    }
+    },
   });
 };
 
@@ -651,7 +647,7 @@ const authLimiter = createRateLimiter(
 // CORS配置
 const corsOptions = {
   origin: (origin, callback) => {
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:1125'];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -661,7 +657,7 @@ const corsOptions = {
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 // 安全头配置
@@ -671,15 +667,15 @@ const helmetConfig = {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'"],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'none'"]
-    }
+      frameSrc: ["'none'"],
+    },
   },
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
 };
 
 // 应用安全中间件
@@ -714,7 +710,7 @@ describe('EnergyService', () => {
       // Arrange
       const mockData = [
         { consumption: 100, production: 120, timestamp: '2024-01-01T00:00:00Z' },
-        { consumption: 80, production: 100, timestamp: '2024-01-02T00:00:00Z' }
+        { consumption: 80, production: 100, timestamp: '2024-01-02T00:00:00Z' },
       ];
       mockDatabase.setMockData('energy_data', mockData);
 
@@ -735,10 +731,7 @@ describe('EnergyService', () => {
     it('should throw error for invalid date range', async () => {
       // Act & Assert
       await expect(
-        energyService.calculateEfficiency(
-          new Date('2024-01-02'),
-          new Date('2024-01-01')
-        )
+        energyService.calculateEfficiency(new Date('2024-01-02'), new Date('2024-01-01'))
       ).rejects.toThrow('开始时间必须早于结束时间');
     });
 
@@ -764,14 +757,14 @@ describe('EnergyService', () => {
       // Arrange
       const mockData = [
         { consumption: 100, production: 120, source: 'solar' },
-        { consumption: 80, production: 100, source: 'wind' }
+        { consumption: 80, production: 100, source: 'wind' },
       ];
       mockDatabase.setMockData('energy_data', mockData);
 
       // Act
       const metrics = await energyService.getEnergyMetrics({
         startTime: new Date('2024-01-01'),
-        endTime: new Date('2024-01-02')
+        endTime: new Date('2024-01-02'),
       });
 
       // Assert
@@ -779,7 +772,7 @@ describe('EnergyService', () => {
         totalConsumption: expect.any(Number),
         totalProduction: expect.any(Number),
         netBalance: expect.any(Number),
-        efficiency: expect.any(Number)
+        efficiency: expect.any(Number),
       });
     });
   });
@@ -828,16 +821,14 @@ describe('Energy API Integration Tests', () => {
             timestamp: expect.any(String),
             consumption: expect.any(Number),
             production: expect.any(Number),
-            source: expect.stringMatching(/^(solar|wind|grid|battery)$/)
-          })
-        ])
+            source: expect.stringMatching(/^(solar|wind|grid|battery)$/),
+          }),
+        ]),
       });
     });
 
     it('should return 401 for unauthorized requests', async () => {
-      await request(app)
-        .get('/api/energy/latest')
-        .expect(401);
+      await request(app).get('/api/energy/latest').expect(401);
     });
 
     it('should respect pagination parameters', async () => {
@@ -855,7 +846,7 @@ describe('Energy API Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      response.body.data.forEach(item => {
+      response.body.data.forEach((item) => {
         expect(item.source).toBe('solar');
       });
     });
@@ -868,7 +859,7 @@ describe('Energy API Integration Tests', () => {
         consumption: 150,
         production: 180,
         source: 'solar',
-        buildingId: 'building-123'
+        buildingId: 'building-123',
       };
 
       const response = await request(app)
@@ -881,8 +872,8 @@ describe('Energy API Integration Tests', () => {
         success: true,
         data: expect.objectContaining({
           id: expect.any(String),
-          ...newData
-        })
+          ...newData,
+        }),
       });
     });
 
@@ -890,7 +881,7 @@ describe('Energy API Integration Tests', () => {
       const invalidData = {
         timestamp: 'invalid-date',
         consumption: -10,
-        source: 'invalid-source'
+        source: 'invalid-source',
       };
 
       const response = await request(app)
@@ -919,28 +910,28 @@ describe('Performance Tests', () => {
 
   it('should handle 100 concurrent requests to energy API', async () => {
     const result = await autocannon({
-      url: 'http://localhost:3000/api/energy/latest',
+      url: 'http://localhost:1125/api/energy/latest',
       connections: 100,
       duration: 30,
       headers: {
-        'Authorization': 'Bearer test-token'
-      }
+        Authorization: 'Bearer test-token',
+      },
     });
 
     expect(result.errors).toBe(0);
     expect(result.requests.average).toBeGreaterThan(100);
     expect(result.latency.p99).toBeLessThan(1000); // 99%的请求在1秒内完成
-    expect(result.latency.p95).toBeLessThan(500);  // 95%的请求在500ms内完成
+    expect(result.latency.p95).toBeLessThan(500); // 95%的请求在500ms内完成
   });
 
   it('should maintain performance under sustained load', async () => {
     const result = await autocannon({
-      url: 'http://localhost:3000/api/performance/metrics',
+      url: 'http://localhost:1125/api/performance/metrics',
       connections: 50,
       duration: 60, // 1分钟持续测试
       headers: {
-        'Authorization': 'Bearer test-token'
-      }
+        Authorization: 'Bearer test-token',
+      },
     });
 
     expect(result.errors).toBe(0);
@@ -950,16 +941,16 @@ describe('Performance Tests', () => {
 
   it('should handle database-intensive operations efficiently', async () => {
     const result = await autocannon({
-      url: 'http://localhost:3000/api/energy/metrics?startTime=2024-01-01&endTime=2024-12-31',
+      url: 'http://localhost:1125/api/energy/metrics?startTime=2024-01-01&endTime=2024-12-31',
       connections: 20,
       duration: 30,
       headers: {
-        'Authorization': 'Bearer test-token'
-      }
+        Authorization: 'Bearer test-token',
+      },
     });
 
     expect(result.errors).toBe(0);
-    expect(result.latency.p95).toBeLessThan(3000); // 复杂查询允许更长时间
+    expect(result.latency.p95).toBeLessThan(1125); // 复杂查询允许更长时间
   });
 });
 ```
@@ -984,29 +975,29 @@ describe('Energy Management E2E Tests', () => {
 
   it('should complete full energy data workflow', async () => {
     // 登录
-    await page.goto('http://localhost:3000/login');
+    await page.goto('http://localhost:1125/login');
     await page.fill('[data-testid="username"]', 'admin');
     await page.fill('[data-testid="password"]', 'password');
     await page.click('[data-testid="login-button"]');
-    
+
     // 等待跳转到仪表板
     await page.waitForURL('**/dashboard');
-    
+
     // 查看能源数据
     await page.click('[data-testid="energy-menu"]');
     await page.waitForSelector('[data-testid="energy-chart"]');
-    
+
     // 验证图表数据加载
     const chartData = await page.textContent('[data-testid="energy-chart"]');
     expect(chartData).toBeTruthy();
-    
+
     // 添加新的能源数据
     await page.click('[data-testid="add-energy-data"]');
     await page.fill('[data-testid="consumption-input"]', '150');
     await page.fill('[data-testid="production-input"]', '180');
     await page.selectOption('[data-testid="source-select"]', 'solar');
     await page.click('[data-testid="submit-button"]');
-    
+
     // 验证数据添加成功
     await page.waitForSelector('[data-testid="success-message"]');
     const successMessage = await page.textContent('[data-testid="success-message"]');
@@ -1034,33 +1025,32 @@ class StructuredLogger {
         winston.format.metadata({ fillExcept: ['message', 'level', 'timestamp'] })
       ),
       transports: [
-        new winston.transports.File({ 
-          filename: 'logs/error.log', 
+        new winston.transports.File({
+          filename: 'logs/error.log',
           level: 'error',
           maxsize: 5242880, // 5MB
-          maxFiles: 5
+          maxFiles: 5,
         }),
-        new winston.transports.File({ 
+        new winston.transports.File({
           filename: 'logs/combined.log',
           maxsize: 5242880,
-          maxFiles: 10
+          maxFiles: 10,
         }),
         new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.simple()
-          )
-        })
-      ]
+          format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+        }),
+      ],
     });
 
     // 生产环境添加Elasticsearch传输
     if (process.env.NODE_ENV === 'production' && process.env.ELASTICSEARCH_URL) {
-      this.logger.add(new ElasticsearchTransport({
-        level: 'info',
-        clientOpts: { node: process.env.ELASTICSEARCH_URL },
-        index: 'carbon-management-logs'
-      }));
+      this.logger.add(
+        new ElasticsearchTransport({
+          level: 'info',
+          clientOpts: { node: process.env.ELASTICSEARCH_URL },
+          index: 'carbon-management-logs',
+        })
+      );
     }
   }
 
@@ -1075,7 +1065,7 @@ class StructuredLogger {
       ip: req.ip,
       userId: req.user?.id,
       requestId: req.id,
-      contentLength: res.get('Content-Length')
+      contentLength: res.get('Content-Length'),
     });
   }
 
@@ -1085,7 +1075,7 @@ class StructuredLogger {
       event,
       data,
       context,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -1095,7 +1085,7 @@ class StructuredLogger {
       metric,
       value,
       tags,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -1105,7 +1095,7 @@ class StructuredLogger {
       event,
       details,
       severity,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
@@ -1128,7 +1118,7 @@ class HealthChecker {
     this.checks.set(name, {
       check: checkFunction,
       timeout: options.timeout || 5000,
-      critical: options.critical || false
+      critical: options.critical || false,
     });
   }
 
@@ -1147,7 +1137,7 @@ class HealthChecker {
       timestamp: new Date().toISOString(),
       version: process.env.APP_VERSION || '1.0.0',
       uptime: process.uptime(),
-      checks: {}
+      checks: {},
     };
 
     const checkPromises = Array.from(this.checks.entries()).map(async ([name, config]) => {
@@ -1155,18 +1145,18 @@ class HealthChecker {
         const start = Date.now();
         const result = await Promise.race([
           config.check(),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Health check timeout')), config.timeout)
-          )
+          ),
         ]);
-        
+
         return {
           name,
           result: {
             ...result,
             responseTime: Date.now() - start,
-            critical: config.critical
-          }
+            critical: config.critical,
+          },
         };
       } catch (error) {
         return {
@@ -1174,19 +1164,19 @@ class HealthChecker {
           result: {
             status: 'unhealthy',
             error: error.message,
-            critical: config.critical
-          }
+            critical: config.critical,
+          },
         };
       }
     });
 
     const checkResults = await Promise.allSettled(checkPromises);
-    
-    checkResults.forEach(result => {
+
+    checkResults.forEach((result) => {
       if (result.status === 'fulfilled') {
         const { name, result: checkResult } = result.value;
         results.checks[name] = checkResult;
-        
+
         // 如果是关键检查且失败，标记整体状态为不健康
         if (checkResult.status === 'unhealthy' && checkResult.critical) {
           results.status = 'unhealthy';
@@ -1197,7 +1187,8 @@ class HealthChecker {
     // 记录健康检查结果
     logger.logPerformanceMetric('health_check', results.status === 'healthy' ? 1 : 0, {
       checks_count: Object.keys(results.checks).length,
-      unhealthy_checks: Object.values(results.checks).filter(c => c.status === 'unhealthy').length
+      unhealthy_checks: Object.values(results.checks).filter((c) => c.status === 'unhealthy')
+        .length,
     });
 
     return results;
@@ -1206,18 +1197,18 @@ class HealthChecker {
   async checkDatabase() {
     const start = Date.now();
     await this.dependencies.database.query('SELECT 1');
-    
+
     // 检查连接池状态
     const poolStats = this.dependencies.database.getPoolStats();
-    
+
     return {
       status: 'healthy',
       responseTime: Date.now() - start,
       details: {
         activeConnections: poolStats.active,
         idleConnections: poolStats.idle,
-        totalConnections: poolStats.total
-      }
+        totalConnections: poolStats.total,
+      },
     };
   }
 
@@ -1225,7 +1216,7 @@ class HealthChecker {
     if (!this.dependencies.mqttClient || !this.dependencies.mqttClient.connected) {
       return {
         status: 'unhealthy',
-        error: 'MQTT client not connected'
+        error: 'MQTT client not connected',
       };
     }
 
@@ -1233,8 +1224,8 @@ class HealthChecker {
       status: 'healthy',
       details: {
         connected: true,
-        reconnectCount: this.dependencies.mqttClient.reconnectCount || 0
-      }
+        reconnectCount: this.dependencies.mqttClient.reconnectCount || 0,
+      },
     };
   }
 
@@ -1242,14 +1233,14 @@ class HealthChecker {
     const usage = process.memoryUsage();
     const threshold = 500 * 1024 * 1024; // 500MB
     const warningThreshold = 400 * 1024 * 1024; // 400MB
-    
+
     let status = 'healthy';
     if (usage.heapUsed > threshold) {
       status = 'unhealthy';
     } else if (usage.heapUsed > warningThreshold) {
       status = 'warning';
     }
-    
+
     return {
       status,
       details: {
@@ -1258,68 +1249,68 @@ class HealthChecker {
         external: usage.external,
         rss: usage.rss,
         threshold,
-        usagePercentage: Math.round((usage.heapUsed / usage.heapTotal) * 100)
-      }
+        usagePercentage: Math.round((usage.heapUsed / usage.heapTotal) * 100),
+      },
     };
   }
 
   async checkCPUUsage() {
     const usage = process.cpuUsage();
     const loadAverage = require('os').loadavg();
-    
+
     return {
       status: loadAverage[0] > 2 ? 'warning' : 'healthy',
       details: {
         user: usage.user,
         system: usage.system,
-        loadAverage: loadAverage
-      }
+        loadAverage: loadAverage,
+      },
     };
   }
 
   async checkDiskSpace() {
     const fs = require('fs');
     const stats = fs.statSync('.');
-    
+
     // 简化的磁盘空间检查，实际应用中可能需要更复杂的逻辑
     return {
       status: 'healthy',
       details: {
         available: 'N/A', // 需要使用第三方库获取实际磁盘空间
-        message: 'Disk space check simplified'
-      }
+        message: 'Disk space check simplified',
+      },
     };
   }
 
   async checkExternalAPIs() {
     // 检查外部API的可用性
     const checks = [];
-    
+
     // 示例：检查天气API
     if (process.env.WEATHER_API_URL) {
       try {
         const response = await fetch(`${process.env.WEATHER_API_URL}/health`, {
-          timeout: 3000
+          timeout: 1125,
         });
         checks.push({
           name: 'weather_api',
           status: response.ok ? 'healthy' : 'unhealthy',
-          statusCode: response.status
+          statusCode: response.status,
         });
       } catch (error) {
         checks.push({
           name: 'weather_api',
           status: 'unhealthy',
-          error: error.message
+          error: error.message,
         });
       }
     }
 
-    const overallStatus = checks.every(c => c.status === 'healthy') ? 'healthy' : 'warning';
-    
+    const overallStatus = checks.every((c) => c.status === 'healthy') ? 'healthy' : 'warning';
+
     return {
       status: overallStatus,
-      details: { checks }
+      details: { checks },
     };
   }
 }
@@ -1337,56 +1328,60 @@ class ApplicationPerformanceMonitor {
     this.alerts = [];
     this.thresholds = {
       responseTime: 1000, // 1秒
-      errorRate: 0.05,    // 5%
-      memoryUsage: 0.8,   // 80%
-      cpuUsage: 0.8       // 80%
+      errorRate: 0.05, // 5%
+      memoryUsage: 0.8, // 80%
+      cpuUsage: 0.8, // 80%
     };
   }
 
   recordMetric(name, value, tags = {}) {
     const timestamp = Date.now();
     const key = `${name}_${JSON.stringify(tags)}`;
-    
+
     if (!this.metrics.has(key)) {
       this.metrics.set(key, []);
     }
-    
+
     const metricData = this.metrics.get(key);
     metricData.push({ value, timestamp, tags });
-    
+
     // 保留最近1小时的数据
     const oneHourAgo = timestamp - 60 * 60 * 1000;
-    this.metrics.set(key, metricData.filter(m => m.timestamp > oneHourAgo));
-    
+    this.metrics.set(
+      key,
+      metricData.filter((m) => m.timestamp > oneHourAgo)
+    );
+
     // 检查是否需要告警
     this.checkAlerts(name, value, tags);
   }
 
-  getMetrics(name, timeRange = 3600000) { // 默认1小时
+  getMetrics(name, timeRange = 3600000) {
+    // 默认1小时
     const now = Date.now();
     const startTime = now - timeRange;
-    
+
     const results = [];
     for (const [key, data] of this.metrics.entries()) {
       if (key.startsWith(name)) {
-        const filteredData = data.filter(m => m.timestamp >= startTime);
+        const filteredData = data.filter((m) => m.timestamp >= startTime);
         if (filteredData.length > 0) {
           results.push({
             key,
             data: filteredData,
-            stats: this.calculateStats(filteredData)
+            stats: this.calculateStats(filteredData),
           });
         }
       }
     }
-    
+
     return results;
   }
 
   calculateStats(data) {
-    const values = data.map(d => d.value);
+    const values = data.map((d) => d.value);
     values.sort((a, b) => a - b);
-    
+
     return {
       count: values.length,
       min: values[0],
@@ -1394,17 +1389,17 @@ class ApplicationPerformanceMonitor {
       avg: values.reduce((a, b) => a + b, 0) / values.length,
       p50: values[Math.floor(values.length * 0.5)],
       p95: values[Math.floor(values.length * 0.95)],
-      p99: values[Math.floor(values.length * 0.99)]
+      p99: values[Math.floor(values.length * 0.99)],
     };
   }
 
   checkAlerts(metricName, value, tags) {
     const threshold = this.thresholds[metricName];
     if (!threshold) return;
-    
+
     let shouldAlert = false;
     let alertMessage = '';
-    
+
     switch (metricName) {
       case 'responseTime':
         if (value > threshold) {
@@ -1426,7 +1421,7 @@ class ApplicationPerformanceMonitor {
         }
         break;
     }
-    
+
     if (shouldAlert) {
       this.triggerAlert({
         metric: metricName,
@@ -1434,20 +1429,20 @@ class ApplicationPerformanceMonitor {
         threshold,
         message: alertMessage,
         tags,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
   }
 
   triggerAlert(alert) {
     this.alerts.push(alert);
-    
+
     // 记录告警日志
     logger.logSecurityEvent('performance_alert', alert, 'high');
-    
+
     // 发送告警通知（邮件、Slack等）
     this.sendAlertNotification(alert);
-    
+
     // 保留最近100个告警
     if (this.alerts.length > 100) {
       this.alerts = this.alerts.slice(-100);
@@ -1463,16 +1458,18 @@ class ApplicationPerformanceMonitor {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: `🚨 性能告警: ${alert.message}`,
-            attachments: [{
-              color: 'danger',
-              fields: [
-                { title: '指标', value: alert.metric, short: true },
-                { title: '当前值', value: alert.value.toString(), short: true },
-                { title: '阈值', value: alert.threshold.toString(), short: true },
-                { title: '时间', value: alert.timestamp, short: true }
-              ]
-            }]
-          })
+            attachments: [
+              {
+                color: 'danger',
+                fields: [
+                  { title: '指标', value: alert.metric, short: true },
+                  { title: '当前值', value: alert.value.toString(), short: true },
+                  { title: '阈值', value: alert.threshold.toString(), short: true },
+                  { title: '时间', value: alert.timestamp, short: true },
+                ],
+              },
+            ],
+          }),
         });
       } catch (error) {
         logger.error('Failed to send Slack alert', { error: error.message });
@@ -1538,17 +1535,17 @@ COPY --from=build --chown=nodejs:nodejs /app/dist ./dist
 
 # 设置环境变量
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=1125
 
 # 切换到非root用户
 USER nodejs
 
 # 暴露端口
-EXPOSE 3000
+EXPOSE 1125
 
 # 健康检查
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+  CMD curl -f http://localhost:1125/health || exit 1
 
 # 使用dumb-init作为PID 1
 ENTRYPOINT ["dumb-init", "--"]
@@ -1568,7 +1565,7 @@ services:
       dockerfile: Dockerfile
       target: runtime
     ports:
-      - "3000:3000"
+      - '1125:1125'
     environment:
       - NODE_ENV=production
       - DATABASE_URL=sqlite:///app/data/park.db
@@ -1590,7 +1587,7 @@ services:
           memory: 256M
           cpus: '0.25'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:1125/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -1599,7 +1596,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
@@ -1613,8 +1610,8 @@ services:
   mqtt:
     image: eclipse-mosquitto:2
     ports:
-      - "1883:1883"
-      - "9001:9001"
+      - '1883:1883'
+      - '9001:9001'
     volumes:
       - ./config/mosquitto:/mosquitto/config
       - mqtt_data:/mosquitto/data
@@ -1629,8 +1626,8 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - ./config/nginx:/etc/nginx/conf.d
       - ./config/ssl:/etc/ssl/certs
@@ -1647,7 +1644,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9090:9090"
+      - '9090:9090'
     volumes:
       - ./config/prometheus:/etc/prometheus
       - prometheus_data:/prometheus
@@ -1663,7 +1660,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3001:3000"
+      - '7240:1125'
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin123
     volumes:
@@ -1693,9 +1690,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   NODE_VERSION: '18'
@@ -1705,7 +1702,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       redis:
         image: redis:7-alpine
@@ -1716,53 +1713,53 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run linting
         run: npm run lint
-      
+
       - name: Run type checking
         run: npm run type-check
-      
+
       - name: Run unit tests
         run: npm run test:unit
         env:
           NODE_ENV: test
-      
+
       - name: Run integration tests
         run: npm run test:integration
         env:
           NODE_ENV: test
           REDIS_URL: redis://localhost:6379
-      
+
       - name: Run security audit
         run: npm audit --audit-level moderate
-      
+
       - name: Run security scan
         run: npm run test:security
-      
+
       - name: Generate test coverage
         run: npm run test:coverage
-      
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
-      
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
@@ -1775,18 +1772,18 @@ jobs:
     permissions:
       contents: read
       packages: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -1797,7 +1794,7 @@ jobs:
             type=ref,event=pr
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
-      
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -1813,30 +1810,30 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
     environment: staging
-    
+
     steps:
       - name: Deploy to staging
         run: |
           echo "Deploying to staging environment"
           # 实际部署脚本
-          
+
   deploy-production:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
-    
+
     steps:
       - name: Deploy to production
         run: |
           echo "Deploying to production environment"
           # 实际部署脚本
-          
+
   performance-test:
     needs: deploy-staging
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
-    
+
     steps:
       - name: Run performance tests
         run: |
@@ -1869,6 +1866,7 @@ jobs:
    - [ ] 设置敏感信息加密
 
 **预期成果**：
+
 - 系统稳定性提升30%
 - 问题定位时间减少50%
 - 配置错误减少90%
@@ -1896,6 +1894,7 @@ jobs:
    - [ ] 优化热点数据访问
 
 **预期成果**：
+
 - API响应时间减少40%
 - 数据库负载降低60%
 - 代码可维护性提升显著
@@ -1923,6 +1922,7 @@ jobs:
    - [ ] 实现优雅关闭
 
 **预期成果**：
+
 - 安全漏洞减少95%
 - 系统可观测性提升显著
 - 并发处理能力提升3倍
@@ -1950,6 +1950,7 @@ jobs:
    - [ ] 添加监控和告警
 
 **预期成果**：
+
 - 部署时间减少80%
 - 代码质量显著提升
 - 生产环境稳定性提升
@@ -1971,6 +1972,7 @@ jobs:
    - [ ] 创建开发指南
 
 **预期成果**：
+
 - 类型安全性提升
 - 开发效率提升
 - 代码可读性增强
@@ -1979,34 +1981,36 @@ jobs:
 
 ### 技术指标
 
-| 指标 | 当前值 | 目标值 | 测量方法 |
-|------|--------|--------|---------|
-| API响应时间 | ~500ms | <200ms | APM监控 |
-| 错误率 | ~5% | <1% | 日志分析 |
-| 代码覆盖率 | 0% | >80% | 测试报告 |
-| 安全漏洞 | 未知 | 0个高危 | 安全扫描 |
-| 部署时间 | ~30分钟 | <5分钟 | CI/CD指标 |
-| 系统可用性 | ~95% | >99.5% | 监控数据 |
+| 指标        | 当前值  | 目标值  | 测量方法  |
+| ----------- | ------- | ------- | --------- |
+| API响应时间 | ~500ms  | <200ms  | APM监控   |
+| 错误率      | ~5%     | <1%     | 日志分析  |
+| 代码覆盖率  | 0%      | >80%    | 测试报告  |
+| 安全漏洞    | 未知    | 0个高危 | 安全扫描  |
+| 部署时间    | ~30分钟 | <5分钟  | CI/CD指标 |
+| 系统可用性  | ~95%    | >99.5%  | 监控数据  |
 
 ### 业务指标
 
-| 指标 | 当前值 | 目标值 | 测量方法 |
-|------|--------|--------|---------|
-| 问题解决时间 | ~4小时 | <1小时 | 工单系统 |
-| 新功能交付周期 | ~2周 | <1周 | 项目管理 |
-| 开发者满意度 | 未测量 | >8/10 | 团队调研 |
-| 系统稳定性 | 一般 | 优秀 | 故障统计 |
+| 指标           | 当前值 | 目标值 | 测量方法 |
+| -------------- | ------ | ------ | -------- |
+| 问题解决时间   | ~4小时 | <1小时 | 工单系统 |
+| 新功能交付周期 | ~2周   | <1周   | 项目管理 |
+| 开发者满意度   | 未测量 | >8/10  | 团队调研 |
+| 系统稳定性     | 一般   | 优秀   | 故障统计 |
 
 ## 🎯 总结
 
 ### 已完成的改进
 
 ✅ **性能监控模块修复**
+
 - 修复了`/api/performance/metrics`路由的500错误
 - 优化了性能指标收集逻辑
 - 确保了系统监控的正常运行
 
 ✅ **路由配置修复**
+
 - 正确配置了性能监控路由
 - 修复了路由挂载问题
 - 验证了所有API端点的正常工作
@@ -2014,31 +2018,37 @@ jobs:
 ### 核心改进建议
 
 🔧 **架构优化**
+
 - 模块化重构，提升代码可维护性
 - 依赖注入容器，降低模块耦合
 - 统一错误处理，提升系统稳定性
 
 🛡️ **安全加固**
+
 - 输入验证和SQL注入防护
 - API安全和访问控制
 - 安全审计和监控
 
 📈 **性能提升**
+
 - 数据库查询优化和索引策略
 - Redis缓存集成
 - 异步处理和并发优化
 
 🧪 **质量保证**
+
 - 全面的测试策略（单元、集成、性能、E2E）
 - 自动化CI/CD流水线
 - 代码质量检查和安全扫描
 
 📊 **监控可观测性**
+
 - 结构化日志和APM监控
 - 健康检查和性能告警
 - 业务指标和技术指标监控
 
 🚀 **部署优化**
+
 - Docker容器化和多阶段构建
 - 生产环境编排和监控
 - 自动化部署和滚动更新
@@ -2066,16 +2076,18 @@ jobs:
 
 ---
 
-*本文档将随着项目进展持续更新，建议定期回顾和调整实施计划。*
+_本文档将随着项目进展持续更新，建议定期回顾和调整实施计划。_
 
 ### 2. 配置管理优化
 
 **当前问题**:
+
 - 配置分散在多个文件中
 - 缺乏配置验证
 - 环境变量类型转换不安全
 
 **建议改进**:
+
 ```javascript
 // 创建 src/config/index.js
 import dotenv from 'dotenv';
@@ -2085,11 +2097,11 @@ dotenv.config();
 
 const configSchema = Joi.object({
   NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
-  PORT: Joi.number().default(3000),
+  PORT: Joi.number().default(1125),
   DB_PATH: Joi.string().required(),
   JWT_SECRET: Joi.string().min(32).required(),
   MQTT_BROKER_URL: Joi.string().uri().required(),
-  RATE_LIMIT_MAX_REQUESTS: Joi.number().default(100)
+  RATE_LIMIT_MAX_REQUESTS: Joi.number().default(100),
 });
 
 const { error, value: config } = configSchema.validate(process.env);
@@ -2104,11 +2116,13 @@ export default config;
 ### 3. 数据库连接池和事务管理
 
 **当前问题**:
+
 - 使用单一数据库连接
 - 缺乏事务管理
 - 没有连接池优化
 
 **建议改进**:
+
 ```javascript
 // 在 src/database.js 中添加
 import sqlite3 from 'sqlite3';
@@ -2122,12 +2136,12 @@ class DatabaseManager {
   async connect() {
     this.db = await open({
       filename: process.env.DB_PATH,
-      driver: sqlite3.Database
+      driver: sqlite3.Database,
     });
-    
+
     // 启用外键约束
     await this.db.exec('PRAGMA foreign_keys = ON');
-    
+
     // 设置连接池参数
     await this.db.exec('PRAGMA journal_mode = WAL');
     await this.db.exec('PRAGMA synchronous = NORMAL');
@@ -2152,11 +2166,13 @@ class DatabaseManager {
 ### 1. JWT 认证改进
 
 **当前问题**:
+
 - 使用硬编码的测试token
 - 缺乏token刷新机制
 - 没有用户会话管理
 
 **建议改进**:
+
 ```javascript
 // 创建 src/auth/jwtManager.js
 import jwt from 'jsonwebtoken';
@@ -2171,13 +2187,13 @@ export class JWTManager {
 
   generateTokens(payload) {
     const accessToken = jwt.sign(payload, this.secret, {
-      expiresIn: this.accessTokenExpiry
+      expiresIn: this.accessTokenExpiry,
     });
-    
+
     const refreshToken = jwt.sign(payload, this.secret, {
-      expiresIn: this.refreshTokenExpiry
+      expiresIn: this.refreshTokenExpiry,
     });
-    
+
     return { accessToken, refreshToken };
   }
 
@@ -2194,6 +2210,7 @@ export class JWTManager {
 ### 2. 输入验证和清理
 
 **建议添加**:
+
 ```javascript
 // 创建 src/middleware/validation.js
 import Joi from 'joi';
@@ -2203,19 +2220,19 @@ export const validateRequest = (schema) => {
     const { error } = schema.validate({
       body: req.body,
       query: req.query,
-      params: req.params
+      params: req.params,
     });
-    
+
     if (error) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: error.details[0].message
-        }
+          message: error.details[0].message,
+        },
       });
     }
-    
+
     next();
   };
 };
@@ -2226,8 +2243,8 @@ export const energyDataSchema = Joi.object({
     device_id: Joi.string().required(),
     value: Joi.number().positive().required(),
     unit: Joi.string().valid('kWh', 'MWh').required(),
-    timestamp: Joi.date().iso().required()
-  })
+    timestamp: Joi.date().iso().required(),
+  }),
 });
 ```
 
@@ -2236,6 +2253,7 @@ export const energyDataSchema = Joi.object({
 ### 1. 结构化日志
 
 **建议实现**:
+
 ```javascript
 // 创建 src/utils/logger.js
 import winston from 'winston';
@@ -2251,12 +2269,9 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
     new winston.transports.File({ filename: 'logs/combined.log' }),
     new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ]
+      format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+    }),
+  ],
 });
 
 export default logger;
@@ -2265,6 +2280,7 @@ export default logger;
 ### 2. 健康检查端点增强
 
 **建议改进**:
+
 ```javascript
 // 在 src/api/routes.js 中添加
 app.get('/health', async (req, res) => {
@@ -2277,12 +2293,12 @@ app.get('/health', async (req, res) => {
       database: await checkDatabase(),
       mqtt: await checkMQTT(),
       memory: checkMemory(),
-      disk: await checkDiskSpace()
-    }
+      disk: await checkDiskSpace(),
+    },
   };
-  
-  const isHealthy = Object.values(health.checks).every(check => check.status === 'ok');
-  
+
+  const isHealthy = Object.values(health.checks).every((check) => check.status === 'ok');
+
   res.status(isHealthy ? 200 : 503).json(health);
 });
 ```
@@ -2292,6 +2308,7 @@ app.get('/health', async (req, res) => {
 ### 1. 单元测试框架
 
 **建议添加**:
+
 ```json
 // 在 package.json 中添加
 {
@@ -2321,14 +2338,11 @@ describe('Energy Data API', () => {
       device_id: 'test-device-001',
       value: 100.5,
       unit: 'kWh',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
-    const response = await request(app)
-      .post('/api/energy-data')
-      .send(energyData)
-      .expect(201);
-    
+
+    const response = await request(app).post('/api/energy-data').send(energyData).expect(201);
+
     expect(response.body.success).toBe(true);
     expect(response.body.data.device_id).toBe(energyData.device_id);
   });
@@ -2340,6 +2354,7 @@ describe('Energy Data API', () => {
 ### 1. 缓存策略
 
 **建议实现**:
+
 ```javascript
 // 创建 src/cache/redisClient.js
 import Redis from 'ioredis';
@@ -2350,7 +2365,7 @@ class CacheManager {
       host: process.env.REDIS_HOST || 'localhost',
       port: process.env.REDIS_PORT || 6379,
       retryDelayOnFailover: 100,
-      maxRetriesPerRequest: 3
+      maxRetriesPerRequest: 3,
     });
   }
 
@@ -2377,15 +2392,16 @@ export default new CacheManager();
 ### 2. 数据库查询优化
 
 **建议添加索引**:
+
 ```sql
 -- 在数据库初始化时添加
-CREATE INDEX IF NOT EXISTS idx_energy_data_device_timestamp 
+CREATE INDEX IF NOT EXISTS idx_energy_data_device_timestamp
 ON energy_data(device_id, timestamp);
 
-CREATE INDEX IF NOT EXISTS idx_carbon_data_timestamp 
+CREATE INDEX IF NOT EXISTS idx_carbon_data_timestamp
 ON carbon_data(timestamp);
 
-CREATE INDEX IF NOT EXISTS idx_alerts_status_created 
+CREATE INDEX IF NOT EXISTS idx_alerts_status_created
 ON alerts(status, created_at);
 ```
 
@@ -2394,6 +2410,7 @@ ON alerts(status, created_at);
 ### 1. ESLint 配置
 
 **建议添加**:
+
 ```json
 // .eslintrc.json
 {
@@ -2432,9 +2449,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -2454,18 +2471,21 @@ jobs:
 ## 📈 实施优先级
 
 ### 高优先级 (立即实施)
+
 1. ✅ 修复性能监控模块错误
 2. 🔄 实施统一错误处理
 3. 🔄 添加输入验证
 4. 🔄 改进JWT认证
 
 ### 中优先级 (2-4周内)
+
 1. 🔄 实施结构化日志
 2. 🔄 添加缓存层
 3. 🔄 完善健康检查
 4. 🔄 数据库优化
 
 ### 低优先级 (1-2个月内)
+
 1. 🔄 完整测试覆盖
 2. 🔄 CI/CD 流水线
 3. 🔄 性能监控仪表板
@@ -2484,4 +2504,4 @@ jobs:
 
 ---
 
-*本文档将随着系统发展持续更新，建议定期回顾和调整优化策略。*
+_本文档将随着系统发展持续更新，建议定期回顾和调整优化策略。_

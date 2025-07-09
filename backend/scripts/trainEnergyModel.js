@@ -1,6 +1,7 @@
 const energyPredictionService = require('../services/energyPredictionService');
 const logger = require('../utils/logger');
 const { program } = require('commander');
+const { MATH_CONSTANTS } = require('../../src/shared/constants/MathConstants.js');
 
 /**
  * 能源预测模型训练脚本
@@ -9,9 +10,12 @@ const { program } = require('commander');
 async function trainModel() {
   try {
     // 解析命令行参数
+    const defaultEpochs = 50;
+    const defaultBatchSize = 32;
+    
     program
-      .option('-e, --epochs <number>', '训练轮次', parseInt, 50)
-      .option('-b, --batch-size <number>', '批次大小', parseInt, 32)
+      .option('-e, --epochs <number>', '训练轮次', parseInt, defaultEpochs)
+      .option('-b, --batch-size <number>', '批次大小', parseInt, defaultBatchSize)
       .option('-l, --log-level <level>', '日志级别', 'info')
       .parse(process.argv);
 
@@ -24,19 +28,24 @@ async function trainModel() {
 
     // 训练模型
     const startTime = Date.now();
-    const trainingSuccess = await energyPredictionService.trainModel(options.epochs, options.batchSize);
+    const trainingSuccess = await energyPredictionService.trainModel(
+      options.epochs,
+      options.batchSize
+    );
     const endTime = Date.now();
 
+    const millisecondsToSeconds = 1000;
+    
     if (trainingSuccess) {
-      logger.info(`模型训练成功，耗时: ${Math.round((endTime - startTime) / 1000)}秒`);
-      process.exit(0);
+      logger.info(`模型训练成功，耗时: ${Math.round((endTime - startTime) / millisecondsToSeconds)}秒`);
+      process.exit(MATH_CONSTANTS.ZERO);
     } else {
       logger.error('模型训练失败');
-      process.exit(1);
+      process.exit(MATH_CONSTANTS.ONE);
     }
   } catch (error) {
     logger.error('模型训练脚本执行失败:', error);
-    process.exit(1);
+    process.exit(MATH_CONSTANTS.ONE);
   }
 }
 
