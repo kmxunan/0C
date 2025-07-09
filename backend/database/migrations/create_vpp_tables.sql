@@ -1,6 +1,6 @@
 -- 虚拟电厂与电力交易模块数据库表结构
 -- P0阶段：资源管理、VPP管理、基础监控
--- 创建时间：2024年
+-- 创建时间：2025年
 -- 版本：1.0.0
 
 -- ==================== 资源管理相关表 ====================
@@ -179,74 +179,29 @@ CREATE TABLE IF NOT EXISTS vpp_trading_records (
 -- 插入示例资源类型配置
 INSERT IGNORE INTO vpp_resources (name, type, description, rated_capacity, unit, technical_specs, operational_constraints, location, latitude, longitude, created_by) VALUES
 ('示例光伏电站', 'solar', '屋顶分布式光伏发电系统', 100.00, 'kW', 
- JSON_OBJECT(
-   'panel_type', 'monocrystalline',
-   'efficiency', 20.5,
-   'tilt_angle', 30,
-   'azimuth', 180,
-   'inverter_efficiency', 98.5
- ), 
- JSON_OBJECT(
-   'min_irradiance', 100,
-   'max_temperature', 85,
-   'maintenance_interval', 6
- ),
+ '{"panel_type": "monocrystalline", "efficiency": 20.5, "tilt_angle": 30, "azimuth": 180, "inverter_efficiency": 98.5}', 
+ '{"min_irradiance": 100, "max_temperature": 85, "maintenance_interval": 6}',
  '园区A栋屋顶', 39.9042, 116.4074, 'system'),
 
 ('示例风力发电机', 'wind', '小型风力发电机组', 50.00, 'kW',
- JSON_OBJECT(
-   'turbine_type', 'horizontal_axis',
-   'cut_in_speed', 3,
-   'rated_speed', 12,
-   'cut_out_speed', 25,
-   'hub_height', 30
- ),
- JSON_OBJECT(
-   'min_wind_speed', 3,
-   'max_wind_speed', 25,
-   'noise_limit', 45
- ),
+ '{"turbine_type": "horizontal_axis", "cut_in_speed": 3, "rated_speed": 12, "cut_out_speed": 25, "hub_height": 30}',
+ '{"min_wind_speed": 3, "max_wind_speed": 25, "noise_limit": 45}',
  '园区北侧空地', 39.9052, 116.4064, 'system'),
 
 ('示例储能电池', 'battery', '锂离子储能电池系统', 200.00, 'kWh',
- JSON_OBJECT(
-   'battery_type', 'lithium_ion',
-   'nominal_voltage', 400,
-   'max_charge_rate', 0.5,
-   'max_discharge_rate', 1.0,
-   'cycle_life', 6000
- ),
- JSON_OBJECT(
-   'soc_min', 10,
-   'soc_max', 95,
-   'temperature_range', JSON_ARRAY(-10, 45)
- ),
+ '{"battery_type": "lithium_ion", "nominal_voltage": 400, "max_charge_rate": 0.5, "max_discharge_rate": 1.0, "cycle_life": 6000}',
+ '{"soc_min": 10, "soc_max": 95, "temperature_range": [-10, 45]}',
  '园区储能站', 39.9032, 116.4084, 'system'),
 
 ('示例负荷', 'load', '可调节负荷设备', 80.00, 'kW',
- JSON_OBJECT(
-   'load_type', 'hvac',
-   'controllability', 'high',
-   'response_time', 5,
-   'flexibility_range', 30
- ),
- JSON_OBJECT(
-   'min_load', 20,
-   'max_load', 80,
-   'control_duration', 4
- ),
+ '{"load_type": "hvac", "controllability": "high", "response_time": 5, "flexibility_range": 30}',
+ '{"min_load": 20, "max_load": 80, "control_duration": 4}',
  '园区办公楼', 39.9022, 116.4094, 'system');
 
 -- 插入示例VPP配置
 INSERT IGNORE INTO vpp_definitions (name, description, operational_strategy, target_capacity, created_by) VALUES
 ('示例虚拟电厂', '园区综合能源虚拟电厂示例', 
- JSON_OBJECT(
-   'optimization_objective', 'cost_minimization',
-   'trading_preference', 'conservative',
-   'response_time', 15,
-   'forecast_horizon', 24,
-   'risk_tolerance', 'medium'
- ),
+ '{"optimization_objective": "cost_minimization", "trading_preference": "conservative", "response_time": 15, "forecast_horizon": 24, "risk_tolerance": "medium"}',
  500.00, 'system');
 
 -- 创建VPP资源关联示例
@@ -267,10 +222,10 @@ SELECT
         WHEN r.type = 'load' THEN 3
         ELSE 4
     END as priority,
-    JSON_OBJECT(
-        'max_daily_cycles', CASE WHEN r.type = 'battery' THEN 2 ELSE NULL END,
-        'min_reserve_capacity', CASE WHEN r.type = 'battery' THEN 20 ELSE NULL END
-    ) as constraints
+    CASE 
+        WHEN r.type = 'battery' THEN '{"max_daily_cycles": 2, "min_reserve_capacity": 20}'
+        ELSE '{}'
+    END as constraints
 FROM vpp_definitions v
 CROSS JOIN vpp_resources r
 WHERE v.name = '示例虚拟电厂'
@@ -297,15 +252,11 @@ INSERT IGNORE INTO vpp_operation_logs (vpp_id, operation_type, operation_details
 SELECT 
     v.id,
     'create',
-    JSON_OBJECT(
-        'action', 'VPP创建',
-        'initial_capacity', v.total_capacity,
-        'resource_count', (
+    CONCAT('{"action": "VPP创建", "initial_capacity": ', v.total_capacity, ', "resource_count": ', (
             SELECT COUNT(*) 
             FROM vpp_resource_associations a 
             WHERE a.vpp_id = v.id
-        )
-    ),
+        ), '}'),
     'system',
     'success'
 FROM vpp_definitions v
@@ -352,87 +303,14 @@ LEFT JOIN vpp_resources r ON a.resource_id = r.id
 LEFT JOIN vpp_resource_instances ri ON r.id = ri.resource_id
 GROUP BY v.id, v.name, v.status, v.total_capacity, v.available_capacity, v.updated_at;
 
--- ==================== 存储过程 ====================
+-- ==================== 存储过程和触发器 ====================
+-- 注意：存储过程和触发器需要单独创建，这里暂时注释掉
+-- 可以通过VPP服务的管理接口单独创建这些高级功能
 
--- 更新VPP容量的存储过程
-DELIMITER //
-CREATE PROCEDURE UpdateVPPCapacity(IN vpp_id_param INT)
-BEGIN
-    DECLARE total_cap DECIMAL(12,2) DEFAULT 0;
-    DECLARE available_cap DECIMAL(12,2) DEFAULT 0;
-    
-    -- 计算总容量
-    SELECT COALESCE(SUM(r.rated_capacity * a.allocation_ratio / 100), 0)
-    INTO total_cap
-    FROM vpp_resource_associations a
-    JOIN vpp_resources r ON a.resource_id = r.id
-    WHERE a.vpp_id = vpp_id_param AND a.status = 'active';
-    
-    -- 计算可用容量
-    SELECT COALESCE(SUM(COALESCE(ri.available_capacity, r.rated_capacity) * a.allocation_ratio / 100), 0)
-    INTO available_cap
-    FROM vpp_resource_associations a
-    JOIN vpp_resources r ON a.resource_id = r.id
-    LEFT JOIN vpp_resource_instances ri ON r.id = ri.resource_id
-    WHERE a.vpp_id = vpp_id_param AND a.status = 'active';
-    
-    -- 更新VPP容量
-    UPDATE vpp_definitions 
-    SET total_capacity = total_cap,
-        available_capacity = available_cap,
-        updated_at = CURRENT_TIMESTAMP
-    WHERE id = vpp_id_param;
-    
-END //
-DELIMITER ;
-
--- ==================== 触发器 ====================
-
--- 资源关联变更时自动更新VPP容量
-DELIMITER //
-CREATE TRIGGER tr_vpp_resource_association_update
-AFTER INSERT ON vpp_resource_associations
-FOR EACH ROW
-BEGIN
-    CALL UpdateVPPCapacity(NEW.vpp_id);
-END //
-
-CREATE TRIGGER tr_vpp_resource_association_update_after_update
-AFTER UPDATE ON vpp_resource_associations
-FOR EACH ROW
-BEGIN
-    CALL UpdateVPPCapacity(NEW.vpp_id);
-    IF OLD.vpp_id != NEW.vpp_id THEN
-        CALL UpdateVPPCapacity(OLD.vpp_id);
-    END IF;
-END //
-
-CREATE TRIGGER tr_vpp_resource_association_update_after_delete
-AFTER DELETE ON vpp_resource_associations
-FOR EACH ROW
-BEGIN
-    CALL UpdateVPPCapacity(OLD.vpp_id);
-END //
-DELIMITER ;
-
--- 记录VPP操作日志的触发器
-DELIMITER //
-CREATE TRIGGER tr_vpp_operation_log_insert
-AFTER INSERT ON vpp_definitions
-FOR EACH ROW
-BEGIN
-    INSERT INTO vpp_operation_logs (vpp_id, operation_type, operation_details, operator, result)
-    VALUES (NEW.id, 'create', JSON_OBJECT('action', 'VPP创建', 'name', NEW.name), NEW.created_by, 'success');
-END //
-
-CREATE TRIGGER tr_vpp_operation_log_update
-AFTER UPDATE ON vpp_definitions
-FOR EACH ROW
-BEGIN
-    INSERT INTO vpp_operation_logs (vpp_id, operation_type, operation_details, operator, result)
-    VALUES (NEW.id, 'update', JSON_OBJECT('action', 'VPP更新', 'changes', JSON_OBJECT('old_status', OLD.status, 'new_status', NEW.status)), NEW.updated_by, 'success');
-END //
-DELIMITER ;
+-- TODO: 后续通过专门的数据库管理脚本创建存储过程和触发器
+-- 1. UpdateVPPCapacity 存储过程 - 更新VPP容量
+-- 2. tr_vpp_resource_association_update 触发器 - 资源关联变更时自动更新VPP容量
+-- 3. tr_vpp_operation_log_insert 触发器 - 记录VPP操作日志
 
 -- ==================== 索引优化 ====================
 

@@ -10,10 +10,10 @@ import java.util.Map;
 
 /**
  * 碳排放预测深度学习模型
- * 
+ *
  * @author Zero Carbon Team
  * @version 1.0
- * @since 2025-01-10
+ * @since 2025-06-10
  */
 @Data
 @Builder

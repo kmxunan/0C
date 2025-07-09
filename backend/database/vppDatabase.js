@@ -126,10 +126,19 @@ class VPPDatabase {
       const migrationSQL = await fs.readFile(migrationPath, 'utf8');
       
       // 分割SQL语句（处理多语句执行）
-      const statements = migrationSQL
-        .split(/;\s*\n/)
-        .filter(stmt => stmt.trim() && !stmt.trim().startsWith('--'))
-        .map(stmt => stmt.trim());
+      // 移除注释行和空行，然后按分号分割
+      const cleanSQL = migrationSQL
+        .split('\n')
+        .filter(line => {
+          const trimmed = line.trim();
+          return trimmed && !trimmed.startsWith('--') && !trimmed.startsWith('/*');
+        })
+        .join('\n');
+      
+      const statements = cleanSQL
+        .split(';')
+        .map(stmt => stmt.trim())
+        .filter(stmt => stmt && stmt.length > 0);
       
       logger.info(`执行${description}: ${statements.length} 个SQL语句`);
       

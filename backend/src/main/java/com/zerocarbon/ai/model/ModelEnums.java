@@ -2,10 +2,10 @@ package com.zerocarbon.ai.model;
 
 /**
  * AI模型相关枚举定义
- * 
+ *
  * @author Zero Carbon Team
  * @version 1.0
- * @since 2025-01-10
+ * @since 2025-06-10
  */
 public class ModelEnums {
     

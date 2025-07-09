@@ -686,6 +686,60 @@ class NationalIndicatorEngine extends EventEmitter {
     };
   }
 
+  /**
+   * 获取按行业分类的清洁能源消费数据
+   * @param {string} parkId - 园区ID
+   * @param {Date} startTime - 开始时间
+   * @param {Date} endTime - 结束时间
+   * @returns {Object} 按行业分类的清洁能源消费数据
+   */
+  async getCleanEnergyBySector(parkId, startTime, endTime) {
+    // 模拟按行业分类的清洁能源消费数据
+    return {
+      manufacturing: 800,
+      energy: 600,
+      transportation: 200,
+      commercial: 150,
+      residential: 100
+    };
+  }
+
+  /**
+   * 获取按时间分类的清洁能源消费数据
+   * @param {string} parkId - 园区ID
+   * @param {Date} startTime - 开始时间
+   * @param {Date} endTime - 结束时间
+   * @param {string} timeRange - 时间范围
+   * @returns {Object} 按时间分类的清洁能源消费数据
+   */
+  async getCleanEnergyByTime(parkId, startTime, endTime, timeRange) {
+    // 模拟按时间分类的清洁能源消费数据
+    return {
+      hourly: [],
+      daily: [],
+      monthly: [],
+      trend: 'increasing'
+    };
+  }
+
+  /**
+   * 获取按时间分类的排放数据
+   * @param {string} parkId - 园区ID
+   * @param {Date} startTime - 开始时间
+   * @param {Date} endTime - 结束时间
+   * @param {string} timeRange - 时间范围
+   * @returns {Object} 按时间分类的排放数据
+   */
+  async getEmissionsByTime(parkId, startTime, endTime, timeRange) {
+    // 模拟按时间分类的排放数据
+    return {
+      hourly: [],
+      daily: [],
+      monthly: [],
+      trend: 'decreasing'
+    };
+  }
+
   async calculateEmissionIntensity(emissions, type, _parkId, _startTime, _endTime) {
     const denominators = {
       gdp: 50000,

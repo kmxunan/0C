@@ -8,7 +8,17 @@ import fs from 'fs';
 import path from 'path';
 
 // Mock fs module
-jest.mock('fs');
+jest.mock('fs', () => ({
+  createWriteStream: jest.fn(() => ({
+    write: jest.fn(),
+    end: jest.fn()
+  })),
+  readdirSync: jest.fn(),
+  statSync: jest.fn(),
+  unlinkSync: jest.fn(),
+  existsSync: jest.fn(() => true),
+  mkdirSync: jest.fn()
+}));
 jest.mock('path');
 
 describe('LogAggregator', () => {

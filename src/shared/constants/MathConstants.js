@@ -539,13 +539,24 @@ export const CARBON_CONSTANTS = {
     NUCLEAR: 0.0
   },
   
-  // 为测试兼容性添加的排放因子别名
+  // 排放因子常量
   EMISSION_FACTORS: {
     ELECTRICITY: 0.8325, // kgCO2/kWh
+    COAL: 2.4930, // kg CO2/kg
+    NATURAL_GAS: 2.1622, // kg CO2/m³
+    DIESEL: 3.0959, // kg CO2/L
+    GASOLINE: 2.9251, // kg CO2/L
+    HEAVY_OIL: 3.1705, // kg CO2/kg
+    LPG: 3.0012 // kg CO2/kg
   },
-  
+
   // 工业过程排放因子
   PROCESS_EMISSION_FACTORS: {
+    CEMENT: 0.5273, // kg CO2/kg水泥
+    STEEL: 2.07, // kg CO2/kg钢铁
+    ALUMINUM: 11.46, // kg CO2/kg铝
+    CHEMICAL: 1.5, // kg CO2/kg化工产品（平均值）
+    PAPER: 0.9 // kg CO2/kg纸张
   },
   
   // 国家核心指标目标值

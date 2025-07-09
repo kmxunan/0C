@@ -25,10 +25,10 @@ import java.util.Map;
 /**
  * 深度学习模型控制器
  * 提供AI/ML模型训练、预测、验证等功能的REST API接口
- * 
+ *
  * @author Zero Carbon Team
  * @version 1.0
- * @since 2025-01-10
+ * @since 2025-06-10
  */
 @Slf4j
 @RestController

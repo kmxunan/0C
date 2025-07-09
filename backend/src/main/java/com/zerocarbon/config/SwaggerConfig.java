@@ -21,7 +21,7 @@ import java.util.List;
  * 
  * @author Zero Carbon Team
  * @version 1.0.0
- * @since 2024
+ * @since 2025
  */
 @Configuration
 public class SwaggerConfig {

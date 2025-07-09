@@ -3,9 +3,9 @@
 
 -- 1. 交易策略表
 CREATE TABLE IF NOT EXISTS trading_strategies (
-    id VARCHAR(36) PRIMARY KEY COMMENT '策略ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '策略ID',
     name VARCHAR(100) NOT NULL COMMENT '策略名称',
-    vpp_id VARCHAR(36) NOT NULL COMMENT '关联VPP ID',
+    vpp_id INT NOT NULL COMMENT '关联VPP ID',
     strategy_type ENUM('RULE_BASED','AI_DRIVEN','HYBRID') NOT NULL COMMENT '策略类型',
     config JSON COMMENT '策略配置',
     model_version VARCHAR(50) COMMENT 'AI模型版本',
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS trading_strategies (
     performance_metrics JSON COMMENT '性能指标',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    created_by VARCHAR(36) COMMENT '创建人',
+    created_by VARCHAR(100) COMMENT '创建人',
     FOREIGN KEY (vpp_id) REFERENCES vpp_definitions(id) ON DELETE CASCADE,
     INDEX idx_vpp_id (vpp_id),
     INDEX idx_strategy_type (strategy_type),
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS trading_strategies (
 
 -- 2. AI模型表
 CREATE TABLE IF NOT EXISTS ai_models (
-    id VARCHAR(36) PRIMARY KEY COMMENT '模型ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '模型ID',
     name VARCHAR(100) NOT NULL COMMENT '模型名称',
     model_type ENUM('PRICE_PREDICTION','DEMAND_FORECASTING','OPTIMIZATION','RISK_ASSESSMENT','ANOMALY_DETECTION') NOT NULL COMMENT '模型类型',
     version VARCHAR(20) NOT NULL COMMENT '模型版本',
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS ai_models (
     performance_metrics JSON COMMENT '性能指标',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    created_by VARCHAR(36) COMMENT '创建人',
+    created_by VARCHAR(100) COMMENT '创建人',
     INDEX idx_model_type (model_type),
     INDEX idx_status (status),
     INDEX idx_framework (framework),
@@ -46,8 +46,8 @@ CREATE TABLE IF NOT EXISTS ai_models (
 
 -- 3. 回测任务表
 CREATE TABLE IF NOT EXISTS backtest_tasks (
-    id VARCHAR(36) PRIMARY KEY COMMENT '任务ID',
-    strategy_id VARCHAR(36) NOT NULL COMMENT '策略ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '任务ID',
+    strategy_id INT NOT NULL COMMENT '策略ID',
     backtest_type ENUM('STRATEGY_VALIDATION','PERFORMANCE_ANALYSIS','RISK_ASSESSMENT','PARAMETER_OPTIMIZATION') DEFAULT 'STRATEGY_VALIDATION' COMMENT '回测类型',
     start_date DATE NOT NULL COMMENT '回测开始日期',
     end_date DATE NOT NULL COMMENT '回测结束日期',
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS backtest_tasks (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     started_at TIMESTAMP NULL COMMENT '开始时间',
     completed_at TIMESTAMP NULL COMMENT '完成时间',
-    created_by VARCHAR(36) COMMENT '创建人',
+    created_by VARCHAR(100) COMMENT '创建人',
     FOREIGN KEY (strategy_id) REFERENCES trading_strategies(id) ON DELETE CASCADE,
     INDEX idx_strategy_id (strategy_id),
     INDEX idx_status (status),
@@ -71,9 +71,9 @@ CREATE TABLE IF NOT EXISTS backtest_tasks (
 
 -- 4. 回测结果表
 CREATE TABLE IF NOT EXISTS backtest_results (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()) COMMENT '结果ID',
-    task_id VARCHAR(36) NOT NULL COMMENT '任务ID',
-    strategy_id VARCHAR(36) NOT NULL COMMENT '策略ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '结果ID',
+    task_id INT NOT NULL COMMENT '任务ID',
+    strategy_id INT NOT NULL COMMENT '策略ID',
     results_data JSON COMMENT '回测结果数据',
     analysis_data JSON COMMENT '分析结果数据',
     report_data JSON COMMENT '报告数据',
@@ -88,9 +88,9 @@ CREATE TABLE IF NOT EXISTS backtest_results (
 
 -- 5. 策略执行历史表
 CREATE TABLE IF NOT EXISTS strategy_execution_history (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()) COMMENT '执行ID',
-    strategy_id VARCHAR(36) NOT NULL COMMENT '策略ID',
-    vpp_id VARCHAR(36) NOT NULL COMMENT 'VPP ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '执行ID',
+    strategy_id INT NOT NULL COMMENT '策略ID',
+    vpp_id INT NOT NULL COMMENT 'VPP ID',
     execution_time TIMESTAMP NOT NULL COMMENT '执行时间',
     market_data JSON COMMENT '市场数据',
     vpp_data JSON COMMENT 'VPP数据',
@@ -110,8 +110,8 @@ CREATE TABLE IF NOT EXISTS strategy_execution_history (
 
 -- 6. AI模型预测历史表
 CREATE TABLE IF NOT EXISTS ai_model_predictions (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()) COMMENT '预测ID',
-    model_id VARCHAR(36) NOT NULL COMMENT '模型ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '预测ID',
+    model_id INT NOT NULL COMMENT '模型ID',
     input_data JSON COMMENT '输入数据',
     prediction_result JSON COMMENT '预测结果',
     confidence DECIMAL(5,4) COMMENT '置信度',
@@ -128,8 +128,8 @@ CREATE TABLE IF NOT EXISTS ai_model_predictions (
 
 -- 7. 策略规则表（用于规则驱动策略的详细配置）
 CREATE TABLE IF NOT EXISTS strategy_rules (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()) COMMENT '规则ID',
-    strategy_id VARCHAR(36) NOT NULL COMMENT '策略ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '规则ID',
+    strategy_id INT NOT NULL COMMENT '策略ID',
     rule_name VARCHAR(100) NOT NULL COMMENT '规则名称',
     rule_order INT DEFAULT 1 COMMENT '规则执行顺序',
     conditions JSON COMMENT '条件配置',
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS strategy_rules (
 
 -- 8. 市场数据历史表（用于回测）
 CREATE TABLE IF NOT EXISTS market_data_history (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()) COMMENT '数据ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '数据ID',
     market_type VARCHAR(50) NOT NULL COMMENT '市场类型',
     trading_date DATE NOT NULL COMMENT '交易日期',
     time_slot VARCHAR(20) NOT NULL COMMENT '时段',
@@ -167,8 +167,8 @@ CREATE TABLE IF NOT EXISTS market_data_history (
 
 -- 9. VPP历史数据表（用于回测）
 CREATE TABLE IF NOT EXISTS vpp_data_history (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()) COMMENT '数据ID',
-    vpp_id VARCHAR(36) NOT NULL COMMENT 'VPP ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '数据ID',
+    vpp_id INT NOT NULL COMMENT 'VPP ID',
     timestamp TIMESTAMP NOT NULL COMMENT '时间戳',
     available_capacity DECIMAL(18,2) COMMENT '可用容量(kW)',
     generation DECIMAL(18,2) COMMENT '发电量(kWh)',
@@ -186,8 +186,8 @@ CREATE TABLE IF NOT EXISTS vpp_data_history (
 
 -- 10. 策略性能指标表
 CREATE TABLE IF NOT EXISTS strategy_performance_metrics (
-    id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()) COMMENT '指标ID',
-    strategy_id VARCHAR(36) NOT NULL COMMENT '策略ID',
+    id INT AUTO_INCREMENT PRIMARY KEY COMMENT '指标ID',
+    strategy_id INT NOT NULL COMMENT '策略ID',
     metric_date DATE NOT NULL COMMENT '指标日期',
     total_executions INT DEFAULT 0 COMMENT '总执行次数',
     successful_executions INT DEFAULT 0 COMMENT '成功执行次数',
@@ -280,80 +280,12 @@ FROM backtest_tasks bt
 LEFT JOIN trading_strategies ts ON bt.strategy_id = ts.id
 LEFT JOIN backtest_results br ON bt.id = br.task_id;
 
--- 创建存储过程：清理历史数据
-DELIMITER //
-CREATE PROCEDURE CleanupHistoryData(
-    IN retention_days INT DEFAULT 90
-)
-BEGIN
-    DECLARE cleanup_date DATE;
-    SET cleanup_date = DATE_SUB(CURDATE(), INTERVAL retention_days DAY);
-    
-    -- 清理策略执行历史
-    DELETE FROM strategy_execution_history 
-    WHERE created_at < cleanup_date;
-    
-    -- 清理AI模型预测历史
-    DELETE FROM ai_model_predictions 
-    WHERE created_at < cleanup_date;
-    
-    -- 清理市场数据历史（保留更长时间用于回测）
-    DELETE FROM market_data_history 
-    WHERE created_at < DATE_SUB(CURDATE(), INTERVAL (retention_days * 2) DAY);
-    
-    -- 清理VPP历史数据
-    DELETE FROM vpp_data_history 
-    WHERE created_at < cleanup_date;
-    
-    -- 清理已完成的回测任务（保留结果）
-    DELETE bt FROM backtest_tasks bt
-    LEFT JOIN backtest_results br ON bt.id = br.task_id
-    WHERE bt.status = 'COMPLETED' 
-    AND bt.completed_at < cleanup_date
-    AND br.id IS NOT NULL;
-    
-    SELECT CONCAT('清理完成，删除了 ', retention_days, ' 天前的历史数据') as message;
-END //
-DELIMITER ;
+-- 注意：存储过程和触发器需要单独创建，这里暂时注释掉
+-- 可以通过VPP服务的管理接口单独创建这些高级功能
 
--- 创建触发器：自动更新策略性能指标
-DELIMITER //
-CREATE TRIGGER tr_update_strategy_performance
-AFTER INSERT ON strategy_execution_history
-FOR EACH ROW
-BEGIN
-    DECLARE exec_date DATE;
-    DECLARE total_exec INT DEFAULT 0;
-    DECLARE success_exec INT DEFAULT 0;
-    DECLARE calc_success_rate DECIMAL(5,4) DEFAULT 0;
-    
-    SET exec_date = DATE(NEW.execution_time);
-    
-    -- 计算当日执行统计
-    SELECT 
-        COUNT(*),
-        SUM(CASE WHEN success = TRUE THEN 1 ELSE 0 END)
-    INTO total_exec, success_exec
-    FROM strategy_execution_history 
-    WHERE strategy_id = NEW.strategy_id 
-    AND DATE(execution_time) = exec_date;
-    
-    -- 计算成功率
-    IF total_exec > 0 THEN
-        SET calc_success_rate = success_exec / total_exec;
-    END IF;
-    
-    -- 插入或更新性能指标
-    INSERT INTO strategy_performance_metrics 
-    (strategy_id, metric_date, total_executions, successful_executions, success_rate)
-    VALUES (NEW.strategy_id, exec_date, total_exec, success_exec, calc_success_rate)
-    ON DUPLICATE KEY UPDATE
-        total_executions = total_exec,
-        successful_executions = success_exec,
-        success_rate = calc_success_rate,
-        updated_at = CURRENT_TIMESTAMP;
-END //
-DELIMITER ;
+-- TODO: 后续通过专门的数据库管理脚本创建存储过程和触发器
+-- 1. CleanupHistoryData 存储过程 - 用于清理历史数据
+-- 2. tr_update_strategy_performance 触发器 - 自动更新策略性能指标
 
 -- 创建索引优化
 CREATE INDEX idx_strategy_execution_composite ON strategy_execution_history(strategy_id, execution_time, success);

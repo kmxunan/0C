@@ -580,6 +580,75 @@ router.post('/advanced-analytics/sensitivity-analysis', asyncHandler(vppControll
 // 压力测试
 router.post('/advanced-analytics/stress-test', asyncHandler(vppController.runStressTest));
 
+// =====================================================
+// P1阶段：智能决策增强接口
+// =====================================================
+
+/**
+ * 执行智能决策
+ * POST /api/vpp/intelligent-decision/make-decision
+ * 请求体：
+ * {
+ *   "vppId": VPP ID,
+ *   "decisionType": "决策类型 (TRADING, RESOURCE_ALLOCATION, RISK_MANAGEMENT)",
+ *   "marketData": {},
+ *   "resourceData": {},
+ *   "constraints": {},
+ *   "preferences": {}
+ * }
+ */
+router.post('/intelligent-decision/make-decision', asyncHandler(vppController.makeIntelligentDecision));
+
+/**
+ * 分析市场条件
+ * POST /api/vpp/intelligent-decision/analyze-market
+ * 请求体：
+ * {
+ *   "marketData": {},
+ *   "timeHorizon": "时间范围 (1h, 4h, 24h)",
+ *   "analysisType": "分析类型 (comprehensive, quick, detailed)"
+ * }
+ */
+router.post('/intelligent-decision/analyze-market', asyncHandler(vppController.analyzeMarketConditions));
+
+/**
+ * AI预测
+ * POST /api/vpp/intelligent-decision/predict
+ * 请求体：
+ * {
+ *   "modelType": "模型类型 (PRICE_PREDICTION, DEMAND_FORECAST, RISK_ASSESSMENT)",
+ *   "inputData": {},
+ *   "predictionHorizon": "预测时间范围",
+ *   "confidenceLevel": 置信度水平
+ * }
+ */
+router.post('/intelligent-decision/predict', asyncHandler(vppController.predictWithAI));
+
+/**
+ * 验证决策
+ * POST /api/vpp/intelligent-decision/validate
+ * 请求体：
+ * {
+ *   "decision": {},
+ *   "constraints": {},
+ *   "riskThresholds": {}
+ * }
+ */
+router.post('/intelligent-decision/validate', asyncHandler(vppController.validateDecision));
+
+/**
+ * 获取决策历史
+ * GET /api/vpp/intelligent-decision/history
+ * 查询参数：
+ * - vppId: VPP ID
+ * - decisionType: 决策类型
+ * - startDate: 开始日期
+ * - endDate: 结束日期
+ * - limit: 分页大小 (默认50，最大100)
+ * - offset: 分页偏移 (默认0)
+ */
+router.get('/intelligent-decision/history', asyncHandler(vppController.getDecisionHistory));
+
 // ==================== 错误处理中间件 ====================
 
 /**

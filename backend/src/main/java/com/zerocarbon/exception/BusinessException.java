@@ -6,7 +6,7 @@ package com.zerocarbon.exception;
  * 
  * @author Zero Carbon Team
  * @version 1.0.0
- * @since 2024
+ * @since 2025
  */
 public class BusinessException extends RuntimeException {
     

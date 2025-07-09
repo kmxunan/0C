@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 const vppDatabase = require('./vppDatabase');
 const fs = require('fs').promises;
 const path = require('path');
+const { VPPTensorFlowModelManager, MODEL_TYPE_MAPPING } = require('./VPPTensorFlowModelManager');
 
 // 模型类型枚举
 const MODEL_TYPES = {
@@ -41,6 +42,7 @@ class VPPAIModelService {
     this.predictionHistory = new Map();
     this.modelPerformance = new Map();
     this.modelInstances = new Map();
+    this.tensorflowManager = new VPPTensorFlowModelManager();
     this.initializeService();
   }
 
@@ -52,6 +54,9 @@ class VPPAIModelService {
       // 创建模型存储目录
       const modelDir = path.join(process.cwd(), 'models');
       await fs.mkdir(modelDir, { recursive: true });
+      
+      // 初始化TensorFlow.js管理器
+      await this.tensorflowManager.initializeManager();
       
       // 加载已注册的模型
       await this.loadRegisteredModels();
@@ -235,6 +240,30 @@ class VPPAIModelService {
         throw new Error('模型未就绪，无法加载');
       }
       
+      // 如果是TensorFlow.js模型，尝试加载到TensorFlow.js管理器
+      if (model.framework === 'tensorflow' && model.model_file_path) {
+        try {
+          const loadSuccess = await this.tensorflowManager.loadModel(
+            modelId, 
+            model.model_file_path, 
+            {
+              modelType: model.model_type,
+              inputSchema: model.input_schema,
+              outputSchema: model.output_schema,
+              preprocessing: model.preprocessing || []
+            }
+          );
+          
+          if (loadSuccess) {
+            logger.info(`TensorFlow.js模型加载成功: ${modelId}`);
+          } else {
+            logger.warn(`TensorFlow.js模型加载失败，将使用模拟预测: ${modelId}`);
+          }
+        } catch (tfError) {
+          logger.warn(`TensorFlow.js模型加载异常: ${modelId}`, tfError);
+        }
+      }
+      
       // 模拟模型加载过程
       // 在实际实现中，这里会根据framework加载相应的模型文件
       const modelInstance = {
@@ -271,13 +300,35 @@ class VPPAIModelService {
    */
   async predict(modelId, inputData) {
     try {
-      const model = await this.loadModel(modelId);
+      const model = await this.getModelById(modelId);
+      
+      if (!model) {
+        throw new Error('模型不存在');
+      }
+      
+      if (model.status !== MODEL_STATUS.READY) {
+        throw new Error('模型状态不可用');
+      }
       
       // 验证输入数据
       this.validateInputData(model, inputData);
       
-      // 执行预测
-      const prediction = await model.predict(inputData);
+      let prediction;
+      
+      // 检查是否为TensorFlow.js模型
+      if (model.framework === 'tensorflow' && model.model_file_path) {
+        try {
+          // 使用TensorFlow.js进行预测
+          prediction = await this.tensorflowManager.predict(modelId, inputData);
+        } catch (tfError) {
+          logger.warn(`TensorFlow.js预测失败，使用模拟预测: ${tfError.message}`);
+          // 回退到模拟预测
+          prediction = await this.simulatePredict(model, inputData);
+        }
+      } else {
+        // 使用模拟预测
+        prediction = await this.simulatePredict(model, inputData);
+      }
       
       // 计算置信度等级
       const confidenceLevel = this.getConfidenceLevel(prediction.confidence);
@@ -318,11 +369,69 @@ class VPPAIModelService {
    */
   async batchPredict(modelId, inputDataArray) {
     try {
-      const results = [];
+      const model = await this.getModelById(modelId);
       
-      for (const inputData of inputDataArray) {
-        const result = await this.predict(modelId, inputData);
-        results.push(result);
+      if (!model) {
+        throw new Error('模型不存在');
+      }
+      
+      if (model.status !== MODEL_STATUS.READY) {
+        throw new Error('模型状态不可用');
+      }
+      
+      let results;
+      
+      // 检查是否为TensorFlow.js模型
+      if (model.framework === 'tensorflow' && model.model_file_path) {
+        try {
+          // 使用TensorFlow.js进行批量预测
+          results = await this.tensorflowManager.batchPredict(modelId, inputDataArray);
+        } catch (tfError) {
+          logger.warn(`TensorFlow.js批量预测失败，使用逐个预测: ${tfError.message}`);
+          // 回退到逐个预测
+          results = [];
+          for (const inputData of inputDataArray) {
+            const prediction = await this.simulatePredict(model, inputData);
+            const confidenceLevel = this.getConfidenceLevel(prediction.confidence);
+            const result = {
+              model_id: modelId,
+              model_name: model.name,
+              model_version: model.version,
+              input_data: inputData,
+              predictions: prediction.output,
+              confidence: prediction.confidence,
+              confidence_level: confidenceLevel,
+              prediction_time: new Date(),
+              processing_time_ms: prediction.processing_time
+            };
+            results.push(result);
+          }
+        }
+      } else {
+        // 使用模拟预测
+        results = [];
+        for (const inputData of inputDataArray) {
+          const prediction = await this.simulatePredict(model, inputData);
+          const confidenceLevel = this.getConfidenceLevel(prediction.confidence);
+          const result = {
+            model_id: modelId,
+            model_name: model.name,
+            model_version: model.version,
+            input_data: inputData,
+            predictions: prediction.output,
+            confidence: prediction.confidence,
+            confidence_level: confidenceLevel,
+            prediction_time: new Date(),
+            processing_time_ms: prediction.processing_time
+          };
+          results.push(result);
+        }
+      }
+      
+      // 记录批量预测历史
+      for (const result of results) {
+        this.recordPrediction(modelId, result);
+        await this.updateModelPerformance(modelId, result);
       }
       
       logger.info(`批量预测完成: ${modelId}`, { count: results.length });
@@ -410,55 +519,65 @@ class VPPAIModelService {
   }
 
   /**
-   * 创建预测函数
+   * 模拟预测（当TensorFlow.js不可用时的回退方案）
+   * @param {Object} model - 模型对象
+   * @param {Object} inputData - 输入数据
+   * @returns {Promise<Object>} 预测结果
+   */
+  async simulatePredict(model, inputData) {
+    const startTime = Date.now();
+    
+    // 模拟不同类型模型的预测逻辑
+    let output;
+    let confidence;
+    
+    switch (model.model_type) {
+      case MODEL_TYPES.PRICE_PREDICTION:
+        output = this.simulatePricePrediction(inputData);
+        confidence = 0.75 + Math.random() * 0.2;
+        break;
+        
+      case MODEL_TYPES.DEMAND_FORECASTING:
+        output = this.simulateDemandForecasting(inputData);
+        confidence = 0.8 + Math.random() * 0.15;
+        break;
+        
+      case MODEL_TYPES.OPTIMIZATION:
+        output = this.simulateOptimization(inputData);
+        confidence = 0.85 + Math.random() * 0.1;
+        break;
+        
+      case MODEL_TYPES.RISK_ASSESSMENT:
+        output = this.simulateRiskAssessment(inputData);
+        confidence = 0.7 + Math.random() * 0.25;
+        break;
+        
+      case MODEL_TYPES.ANOMALY_DETECTION:
+        output = this.simulateAnomalyDetection(inputData);
+        confidence = 0.9 + Math.random() * 0.1;
+        break;
+        
+      default:
+        throw new Error(`不支持的模型类型: ${model.model_type}`);
+    }
+    
+    const processingTime = Date.now() - startTime;
+    
+    return {
+      output,
+      confidence,
+      processing_time: processingTime
+    };
+  }
+
+  /**
+   * 创建预测函数（保留用于向后兼容）
    * @param {Object} model - 模型对象
    * @returns {Function} 预测函数
    */
   createPredictFunction(model) {
     return async (inputData) => {
-      const startTime = Date.now();
-      
-      // 模拟不同类型模型的预测逻辑
-      let output;
-      let confidence;
-      
-      switch (model.model_type) {
-        case MODEL_TYPES.PRICE_PREDICTION:
-          output = this.simulatePricePrediction(inputData);
-          confidence = 0.75 + Math.random() * 0.2;
-          break;
-          
-        case MODEL_TYPES.DEMAND_FORECASTING:
-          output = this.simulateDemandForecasting(inputData);
-          confidence = 0.8 + Math.random() * 0.15;
-          break;
-          
-        case MODEL_TYPES.OPTIMIZATION:
-          output = this.simulateOptimization(inputData);
-          confidence = 0.85 + Math.random() * 0.1;
-          break;
-          
-        case MODEL_TYPES.RISK_ASSESSMENT:
-          output = this.simulateRiskAssessment(inputData);
-          confidence = 0.7 + Math.random() * 0.25;
-          break;
-          
-        case MODEL_TYPES.ANOMALY_DETECTION:
-          output = this.simulateAnomalyDetection(inputData);
-          confidence = 0.9 + Math.random() * 0.1;
-          break;
-          
-        default:
-          throw new Error(`不支持的模型类型: ${model.model_type}`);
-      }
-      
-      const processingTime = Date.now() - startTime;
-      
-      return {
-        output,
-        confidence,
-        processing_time: processingTime
-      };
+      return await this.simulatePredict(model, inputData);
     };
   }
 

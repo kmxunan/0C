@@ -211,10 +211,10 @@ class CarbonAccountingEngine extends EventEmitter {
     
     // 计算工业过程排放
     const processEmissionsData = this.calculateProcessEmissions(parkData.process || {});
-    const industrialProcess = processEmissionsData.total || processEmissionsData;
+    const industrialProcess = typeof processEmissionsData === 'object' ? processEmissionsData.total : processEmissionsData;
     
     // 计算总排放量
-    const total = energyActivity + industrialProcess;
+    const total = Number(energyActivity) + Number(industrialProcess);
     
     return {
       energyActivity,

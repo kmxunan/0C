@@ -12,10 +12,10 @@ import java.util.Map;
 
 /**
  * AI模型预测相关数据结构
- * 
+ *
  * @author Zero Carbon Team
  * @version 1.0
- * @since 2025-01-10
+ * @since 2025-06-10
  */
 public class PredictionData {
     

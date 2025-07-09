@@ -8,6 +8,7 @@ import vppTradingService from '../services/VPPTradingService.js';
 import vppAnalyticsService from '../services/VPPAnalyticsService.js';
 import vppAdvancedTradingService from '../services/VPPAdvancedTradingService.js';
 import vppIntelligentDecisionService from '../services/VPPIntelligentDecisionService.js';
+import vppIntelligentDecisionEnhancedService from '../services/VPPIntelligentDecisionEnhancedService.js';
 import vppAdvancedAnalyticsService from '../services/VPPAdvancedAnalyticsService.js';
 import vppResourceTemplateService from '../services/VPPResourceTemplateService.js';
 import vppResourceAggregationService from '../services/VPPResourceAggregationService.js';
@@ -68,6 +69,13 @@ class VPPController {
     this.optimizePortfolio = this.optimizePortfolio.bind(this);
     this.performSensitivityAnalysis = this.performSensitivityAnalysis.bind(this);
     this.runStressTest = this.runStressTest.bind(this);
+    
+    // P1阶段新增方法绑定 - 智能决策增强
+    this.makeIntelligentDecision = this.makeIntelligentDecision.bind(this);
+    this.analyzeMarketConditions = this.analyzeMarketConditions.bind(this);
+    this.predictWithAI = this.predictWithAI.bind(this);
+    this.validateDecision = this.validateDecision.bind(this);
+    this.getDecisionHistory = this.getDecisionHistory.bind(this);
     
     // P0阶段新增方法绑定 - 资源模板管理
     this.getResourceTemplates = this.getResourceTemplates.bind(this);
@@ -2402,6 +2410,284 @@ class VPPController {
     }
   }
 
+  // ==================== P1阶段智能决策增强接口 ====================
+
+  /**
+   * 执行智能决策
+   * POST /api/vpp/intelligent-decision/make-decision
+   */
+  async makeIntelligentDecision(req, res) {
+    try {
+      const { vppId, decisionType, marketData, resourceData, constraints, preferences } = req.body;
+      
+      if (!vppId || !decisionType) {
+        return res.status(400).json({
+          success: false,
+          error: '缺少必要字段: vppId, decisionType'
+        });
+      }
+      
+      const decisionRequest = {
+        vppId,
+        decisionType,
+        marketData,
+        resourceData,
+        constraints,
+        preferences
+      };
+      
+      const result = await vppIntelligentDecisionEnhancedService.makeIntelligentDecision(decisionRequest);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          data: result.data,
+          message: result.message,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        res.status(400).json({ success: false, error: result.error });
+      }
+    } catch (error) {
+      logger.error('智能决策执行失败:', error);
+      res.status(500).json({
+        success: false,
+        error: '智能决策执行失败',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * 分析市场条件
+   * POST /api/vpp/intelligent-decision/analyze-market
+   */
+  async analyzeMarketConditions(req, res) {
+    try {
+      const { marketData, timeHorizon, analysisType } = req.body;
+      
+      if (!marketData) {
+        return res.status(400).json({
+          success: false,
+          error: '缺少必要字段: marketData'
+        });
+      }
+      
+      const analysisRequest = {
+        marketData,
+        timeHorizon: timeHorizon || '1h',
+        analysisType: analysisType || 'comprehensive'
+      };
+      
+      const result = await vppIntelligentDecisionEnhancedService.analyzeMarketConditions(analysisRequest);
+      
+      res.json({
+        success: true,
+        data: result,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      logger.error('市场条件分析失败:', error);
+      res.status(500).json({
+        success: false,
+        error: '市场条件分析失败',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * AI预测
+   * POST /api/vpp/intelligent-decision/predict
+   */
+  async predictWithAI(req, res) {
+    try {
+      const { modelType, inputData, predictionHorizon, confidenceLevel } = req.body;
+      
+      if (!modelType || !inputData) {
+        return res.status(400).json({
+          success: false,
+          error: '缺少必要字段: modelType, inputData'
+        });
+      }
+      
+      const predictionRequest = {
+        modelType,
+        inputData,
+        predictionHorizon: predictionHorizon || '24h',
+        confidenceLevel: confidenceLevel || 0.95
+      };
+      
+      const result = await vppIntelligentDecisionEnhancedService.generateAIPrediction(predictionRequest);
+      
+      res.json({
+        success: true,
+        data: result,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      logger.error('AI预测失败:', error);
+      res.status(500).json({
+        success: false,
+        error: 'AI预测失败',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * 验证决策
+   * POST /api/vpp/intelligent-decision/validate
+   */
+  async validateDecision(req, res) {
+    try {
+      const { decision, constraints, riskThresholds } = req.body;
+      
+      if (!decision) {
+        return res.status(400).json({
+          success: false,
+          error: '缺少必要字段: decision'
+        });
+      }
+      
+      const validationRequest = {
+        decision,
+        constraints: constraints || {},
+        riskThresholds: riskThresholds || {}
+      };
+      
+      const result = await vppIntelligentDecisionEnhancedService.validateDecision(validationRequest);
+      
+      res.json({
+        success: true,
+        data: result,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      logger.error('决策验证失败:', error);
+      res.status(500).json({
+        success: false,
+        error: '决策验证失败',
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * 获取决策历史
+   * GET /api/vpp/intelligent-decision/history
+   */
+  async getDecisionHistory(req, res) {
+    try {
+      const {
+        vppId,
+        decisionType,
+        startDate,
+        endDate,
+        limit = 50,
+        offset = 0
+      } = req.query;
+      
+      const filters = {
+        vppId: vppId ? parseInt(vppId) : undefined,
+        decisionType,
+        startDate,
+        endDate,
+        limit: Math.min(parseInt(limit) || 50, 100),
+        offset: Math.max(parseInt(offset) || 0, 0)
+      };
+      
+      // 模拟决策历史数据
+      const mockHistory = {
+        decisions: [
+          {
+            id: 1,
+            vppId: filters.vppId || 1,
+            decisionType: 'TRADING',
+            decision: {
+              action: 'BUY',
+              quantity: 100,
+              price: 0.12,
+              confidence: 0.85
+            },
+            aiPredictions: {
+              priceDirection: 'UP',
+              confidence: 0.78,
+              timeHorizon: '4h'
+            },
+            marketConditions: {
+              volatility: 'MEDIUM',
+              trend: 'BULLISH',
+              liquidity: 'HIGH'
+            },
+            outcome: {
+              executed: true,
+              profit: 150.5,
+              accuracy: 0.82
+            },
+            timestamp: new Date(Date.now() - 3600000).toISOString()
+          },
+          {
+            id: 2,
+            vppId: filters.vppId || 1,
+            decisionType: 'RESOURCE_ALLOCATION',
+            decision: {
+              action: 'REALLOCATE',
+              resources: [1, 3, 5],
+              allocation: [0.4, 0.35, 0.25],
+              confidence: 0.91
+            },
+            aiPredictions: {
+              demandForecast: [120, 135, 110],
+              confidence: 0.88,
+              timeHorizon: '24h'
+            },
+            marketConditions: {
+              demand: 'HIGH',
+              supply: 'MEDIUM',
+              price: 'STABLE'
+            },
+            outcome: {
+              executed: true,
+              efficiency: 0.94,
+              costSaving: 230.8
+            },
+            timestamp: new Date(Date.now() - 7200000).toISOString()
+          }
+        ],
+        pagination: {
+          total: 2,
+          limit: filters.limit,
+          offset: filters.offset,
+          hasMore: false
+        },
+        statistics: {
+          totalDecisions: 2,
+          successRate: 0.85,
+          averageConfidence: 0.88,
+          totalProfit: 381.3
+        }
+      };
+      
+      res.json({
+        success: true,
+        data: mockHistory,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      logger.error('获取决策历史失败:', error);
+      res.status(500).json({
+        success: false,
+        error: '获取决策历史失败',
+        message: error.message
+      });
+    }
+  }
+
   // ==================== 系统接口 ====================
 
   // ==================== P1阶段新增接口 ====================
@@ -3321,6 +3607,9 @@ class VPPController {
       const intelligentDecisionStatus = await vppIntelligentDecisionService.getServiceStatus();
       const advancedAnalyticsStatus = await vppAdvancedAnalyticsService.getServiceStatus();
       
+      // P1阶段智能决策增强服务状态
+      const intelligentDecisionEnhancedStatus = await vppIntelligentDecisionEnhancedService.getServiceStatus();
+      
       res.json({
         success: true,
         data: {
@@ -3345,6 +3634,9 @@ class VPPController {
           advancedTradingService: advancedTradingStatus,
           intelligentDecisionService: intelligentDecisionStatus,
           advancedAnalyticsService: advancedAnalyticsStatus,
+          
+          // P1阶段智能决策增强服务
+          intelligentDecisionEnhancedService: intelligentDecisionEnhancedStatus,
           
           overall: {
             status: 'running',
@@ -3398,7 +3690,10 @@ class VPPController {
           // P2阶段高级服务
           advancedTradingService: 'healthy',
           intelligentDecisionService: 'healthy',
-          advancedAnalyticsService: 'healthy'
+          advancedAnalyticsService: 'healthy',
+          
+          // P1阶段智能决策增强服务
+          intelligentDecisionEnhancedService: 'healthy'
         },
         phase: {
           current: 'P0',
