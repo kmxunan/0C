@@ -5,10 +5,10 @@
  * 创建时间: 2025年1月
  */
 
-const db = require('../config/database');
-const logger = require('../utils/logger');
-const axios = require('axios');
-const crypto = require('crypto');
+import db from '../config/database.js';
+import logger from '../utils/logger.js';
+import axios from 'axios';
+import crypto from 'crypto';
 
 class MarketConnectorService {
     constructor() {
@@ -1037,4 +1037,4 @@ class MarketConnectorService {
     }
 }
 
-module.exports = new MarketConnectorService();
+export default new MarketConnectorService();

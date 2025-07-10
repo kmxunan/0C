@@ -42,7 +42,6 @@ import {
   AccordionDetails,
   Tab,
   Tabs,
-  TabPanel,
   Badge,
   Avatar
 } from '@mui/material';
@@ -58,9 +57,8 @@ import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
   Power as PowerIcon,
-  Battery as BatteryIcon,
-  Solar as SolarIcon,
-  Wind as WindIcon,
+  BatteryFull as BatteryIcon,
+  Air as WindIcon,
   Factory as FactoryIcon,
   Home as HomeIcon,
   Business as BusinessIcon,
@@ -75,7 +73,7 @@ import {
   Download as DownloadIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+// import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'; // Removed due to React 19 compatibility
 import { Line, Doughnut, Bar, Radar } from 'react-chartjs-2';
 
 // 样式化组件
@@ -107,22 +105,18 @@ const ResourceCard = styled(Paper)(({ theme, resourceType, isSelected }) => ({
   }
 }));
 
-const AggregationZone = styled(Paper)(({ theme, isDragOver }) => ({
+const AggregationZone = styled(Paper)(({ theme }) => ({
   minHeight: 200,
   padding: theme.spacing(2),
   margin: theme.spacing(1),
-  border: `2px dashed ${
-    isDragOver ? theme.palette.primary.main : theme.palette.divider
-  }`,
+  border: `2px dashed ${theme.palette.divider}`,
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: isDragOver ? 
-    theme.palette.action.hover : 
-    theme.palette.background.paper,
+  backgroundColor: theme.palette.background.paper,
   transition: 'all 0.3s ease-in-out',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  justifyContent: isDragOver ? 'center' : 'flex-start'
+  justifyContent: 'flex-start'
 }));
 
 const ResourceIcon = styled(Avatar)(({ theme, resourceType }) => ({
@@ -397,7 +391,7 @@ const ResourceAggregationManager = () => {
   const getResourceIcon = (type) => {
     switch (type) {
       case 'solar':
-        return <SolarIcon />;
+        return <PowerIcon />;
       case 'wind':
         return <WindIcon />;
       case 'battery':
@@ -608,107 +602,83 @@ const ResourceAggregationManager = () => {
         <StyledCard sx={{ mt: 3 }}>
           <CardHeader title="资源列表" />
           <CardContent>
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="resources">
-                {(provided) => (
-                  <div {...provided.droppableProps} ref={provided.innerRef}>
-                    <Grid container spacing={2}>
-                      {resources.map((resource, index) => (
-                        <Draggable
-                          key={resource.resource_id}
-                          draggableId={`resource-${resource.resource_id}`}
-                          index={index}
+            <Grid container spacing={2}>
+              {resources.map((resource, index) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={resource.resource_id}>
+                  <ResourceCard
+                    resourceType={resource.type}
+                    isSelected={selectedResources.includes(resource.resource_id)}
+                    onClick={() => {
+                      if (selectedResources.includes(resource.resource_id)) {
+                        setSelectedResources(prev => 
+                          prev.filter(id => id !== resource.resource_id)
+                        );
+                      } else {
+                        setSelectedResources(prev => [...prev, resource.resource_id]);
+                      }
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <ResourceIcon resourceType={resource.type}>
+                        {getResourceIcon(resource.type)}
+                      </ResourceIcon>
+                      <Box sx={{ ml: 2, flex: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                          {resource.name}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {resource.location}
+                        </Typography>
+                      </Box>
+                      <DragIcon color="action" />
+                    </Box>
+                    
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="body2">容量</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          {resource.capacity} MW
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="body2">当前输出</Typography>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            fontWeight: 'bold',
+                            color: resource.current_output >= 0 ? 'success.main' : 'error.main'
+                          }}
                         >
-                          {(provided, snapshot) => (
-                            <Grid item xs={12} sm={6} md={4} lg={3}>
-                              <ResourceCard
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                resourceType={resource.type}
-                                isSelected={selectedResources.includes(resource.resource_id)}
-                                sx={{
-                                  transform: snapshot.isDragging ? 'rotate(5deg)' : 'none',
-                                  opacity: snapshot.isDragging ? 0.8 : 1
-                                }}
-                                onClick={() => {
-                                  if (selectedResources.includes(resource.resource_id)) {
-                                    setSelectedResources(prev => 
-                                      prev.filter(id => id !== resource.resource_id)
-                                    );
-                                  } else {
-                                    setSelectedResources(prev => [...prev, resource.resource_id]);
-                                  }
-                                }}
-                              >
-                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                  <ResourceIcon resourceType={resource.type}>
-                                    {getResourceIcon(resource.type)}
-                                  </ResourceIcon>
-                                  <Box sx={{ ml: 2, flex: 1 }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                                      {resource.name}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                      {resource.location}
-                                    </Typography>
-                                  </Box>
-                                  <DragIcon color="action" />
-                                </Box>
-                                
-                                <Box sx={{ mb: 2 }}>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                    <Typography variant="body2">容量</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                      {resource.capacity} MW
-                                    </Typography>
-                                  </Box>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                    <Typography variant="body2">当前输出</Typography>
-                                    <Typography 
-                                      variant="body2" 
-                                      sx={{ 
-                                        fontWeight: 'bold',
-                                        color: resource.current_output >= 0 ? 'success.main' : 'error.main'
-                                      }}
-                                    >
-                                      {resource.current_output} MW
-                                    </Typography>
-                                  </Box>
-                                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="body2">效率</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                      {(resource.efficiency * 100).toFixed(1)}%
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                                
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <Chip
-                                    label={resource.status}
-                                    size="small"
-                                    color={getStatusColor(resource.status)}
-                                  />
-                                  <Box>
-                                    <IconButton size="small">
-                                      <EditIcon />
-                                    </IconButton>
-                                    <IconButton size="small">
-                                      <SettingsIcon />
-                                    </IconButton>
-                                  </Box>
-                                </Box>
-                              </ResourceCard>
-                            </Grid>
-                          )}
-                        </Draggable>
-                      ))}
-                    </Grid>
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
+                          {resource.current_output} MW
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">效率</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                          {(resource.efficiency * 100).toFixed(1)}%
+                        </Typography>
+                      </Box>
+                    </Box>
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Chip
+                        label={resource.status}
+                        size="small"
+                        color={getStatusColor(resource.status)}
+                      />
+                      <Box>
+                        <IconButton size="small">
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton size="small">
+                          <SettingsIcon />
+                        </IconButton>
+                      </Box>
+                    </Box>
+                  </ResourceCard>
+                </Grid>
+              ))}
+            </Grid>
           </CardContent>
         </StyledCard>
       </TabPanel>
@@ -734,20 +704,8 @@ const ResourceAggregationManager = () => {
                   }
                 />
                 <CardContent>
-                  <DragDropContext onDragEnd={handleDragEnd}>
-                    <Droppable droppableId={`group-${group.group_id}`}>
-                      {(provided, snapshot) => (
-                        <AggregationZone
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          isDragOver={snapshot.isDraggingOver}
-                        >
-                          {snapshot.isDraggingOver ? (
-                            <Typography variant="h6" color="primary">
-                              拖拽资源到此处
-                            </Typography>
-                          ) : (
-                            <>
+                  <AggregationZone>
+                    <>
                               <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mb: 2 }}>
                                 <Typography variant="h6">聚合资源</Typography>
                                 <Chip
@@ -798,13 +756,8 @@ const ResourceAggregationManager = () => {
                                   <Typography variant="h6">{(group.performance.efficiency * 100).toFixed(1)}%</Typography>
                                 </Grid>
                               </Grid>
-                            </>
-                          )}
-                          {provided.placeholder}
-                        </AggregationZone>
-                      )}
-                    </Droppable>
-                  </DragDropContext>
+                    </>
+                  </AggregationZone>
                 </CardContent>
               </StyledCard>
             </Grid>

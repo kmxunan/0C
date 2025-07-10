@@ -4,7 +4,7 @@
  * 用于验证用户是否具有执行特定操作的权限
  */
 
-const responseFormatter = require('./responseFormatter');
+import responseFormatter from './responseFormatter.js';
 
 // 角色权限级别定义
 const ROLE_LEVELS = {
@@ -359,7 +359,7 @@ function autoPermissionCheck(resource) {
   };
 }
 
-module.exports = {
+export {
   requireRole,
   requirePermission,
   requireMinimumRole,
@@ -373,3 +373,5 @@ module.exports = {
   ROLE_LEVELS,
   ROLE_PERMISSIONS
 };
+
+export default requireRole;

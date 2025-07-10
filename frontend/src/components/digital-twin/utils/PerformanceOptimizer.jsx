@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useRef, useEffect, useState, useCallback } from 'react';
-import * as THREE from 'three';
+// Performance optimization utilities
 
 /**
  * 性能优化器上下文

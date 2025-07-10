@@ -1,13 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Paper,
   Typography,
   Slider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Switch,
   FormControlLabel,
   Button,
@@ -26,21 +22,15 @@ import {
 import {
   ExpandMore,
   Settings,
-  Speed,
-  Memory,
-  Visibility,
   VisibilityOff,
-  Refresh,
   Save,
   Restore,
-  TuneOutlined,
-  Assessment,
-  ModelTraining
+  TuneOutlined
 } from '@mui/icons-material';
 import { useModelQuality } from './ModelQualityManager';
 import { usePerformanceOptimizer } from './PerformanceOptimizer';
 import { useModelOptimizer } from './ModelOptimizer';
-import { modelQualityConfig } from './modelQualityConfig';
+
 
 /**
  * 模型质量控制面板组件
@@ -52,7 +42,7 @@ const ModelQualityControlPanel = ({
   expanded = false,
   onClose
 }) => {
-  const [isExpanded, setIsExpanded] = useState(expanded);
+  const [isExpanded] = useState(expanded);
   const [activeTab, setActiveTab] = useState('quality');
   const [showAdvanced, setShowAdvanced] = useState(false);
   
@@ -61,14 +51,13 @@ const ModelQualityControlPanel = ({
     setQualityLevel,
     lodLevel,
     performanceMetrics,
-    qualityHistory,
+
     getQualityStats,
     applyOptimization
   } = useModelQuality();
   
   const {
-    getPerformanceMetrics,
-    getOptimizationStrategy
+    getPerformanceMetrics
   } = usePerformanceOptimizer();
   
   const {

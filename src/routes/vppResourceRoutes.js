@@ -5,13 +5,15 @@
  * 创建时间: 2025年1月
  */
 
-const express = require('express');
+import express from 'express';
+import vppResourceService from '../services/vppResourceService.js';
+import { authenticate } from '../interfaces/http/middleware/authMiddleware.js';
+import { requireRole } from '../interfaces/http/middleware/roleCheck.js';
+import { validateRequest } from '../interfaces/http/middleware/validation.js';
+import { body, param, query } from 'express-validator';
+import logger from '../utils/logger.js';
+
 const router = express.Router();
-const vppResourceService = require('../services/vppResourceService');
-const { authenticateToken, authorizeRole } = require('../middleware/auth');
-const { validateRequest } = require('../middleware/validation');
-const { body, param, query } = require('express-validator');
-const logger = require('../utils/logger');
 
 /**
  * ==================== 资源模板管理接口 ====================
@@ -22,7 +24,7 @@ const logger = require('../utils/logger');
  * GET /api/v1/vpp/resource-templates
  */
 router.get('/resource-templates', 
-    authenticateToken,
+    authenticate,
     [
         query('type').optional().isString().withMessage('资源类型必须是字符串'),
         query('category').optional().isIn(['GENERATION', 'STORAGE', 'LOAD', 'FLEXIBLE']).withMessage('资源分类无效'),
@@ -49,8 +51,8 @@ router.get('/resource-templates',
  * POST /api/v1/vpp/resource-templates
  */
 router.post('/resource-templates',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         body('name').notEmpty().isLength({ max: 100 }).withMessage('模板名称不能为空且长度不超过100字符'),
         body('type').notEmpty().isString().withMessage('资源类型不能为空'),
@@ -84,8 +86,8 @@ router.post('/resource-templates',
  * PUT /api/v1/vpp/resource-templates/:id
  */
 router.put('/resource-templates/:id',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         param('id').isUUID().withMessage('模板ID格式无效'),
         body('name').optional().isLength({ max: 100 }).withMessage('模板名称长度不超过100字符'),
@@ -113,8 +115,8 @@ router.put('/resource-templates/:id',
  * DELETE /api/v1/vpp/resource-templates/:id
  */
 router.delete('/resource-templates/:id',
-    authenticateToken,
-    authorizeRole(['admin']),
+    authenticate,
+    requireRole(['admin']),
     [
         param('id').isUUID().withMessage('模板ID格式无效')
     ],
@@ -148,7 +150,7 @@ router.delete('/resource-templates/:id',
  * GET /api/v1/vpp/resource-instances
  */
 router.get('/resource-instances',
-    authenticateToken,
+    authenticate,
     [
         query('template_id').optional().isUUID().withMessage('模板ID格式无效'),
         query('status').optional().isIn(['online', 'offline', 'maintenance', 'error', 'standby']).withMessage('状态值无效'),
@@ -175,8 +177,8 @@ router.get('/resource-instances',
  * POST /api/v1/vpp/resource-instances
  */
 router.post('/resource-instances',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         body('template_id').isUUID().withMessage('模板ID格式无效'),
         body('resource_id').isInt().withMessage('资源ID必须是整数'),
@@ -205,8 +207,8 @@ router.post('/resource-instances',
  * PUT /api/v1/vpp/resource-instances/:id/status
  */
 router.put('/resource-instances/:id/status',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         param('id').isInt().withMessage('实例ID必须是整数'),
         body('status').isIn(['online', 'offline', 'maintenance', 'error', 'standby']).withMessage('状态值无效'),
@@ -232,7 +234,7 @@ router.put('/resource-instances/:id/status',
  * GET /api/v1/vpp/resource-instances/:id/realtime-data
  */
 router.get('/resource-instances/:id/realtime-data',
-    authenticateToken,
+    authenticate,
     [
         param('id').isInt().withMessage('实例ID必须是整数')
     ],
@@ -260,7 +262,7 @@ router.get('/resource-instances/:id/realtime-data',
  * GET /api/v1/vpp/vpps
  */
 router.get('/vpps',
-    authenticateToken,
+    authenticate,
     [
         query('market_type').optional().isIn(['day_ahead', 'intraday', 'balancing', 'ancillary']).withMessage('市场类型无效'),
         query('status').optional().isIn(['active', 'inactive', 'maintenance', 'suspended']).withMessage('状态值无效'),
@@ -299,8 +301,8 @@ router.get('/vpps',
  * POST /api/v1/vpp/vpps
  */
 router.post('/vpps',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         body('name').notEmpty().isLength({ max: 100 }).withMessage('VPP名称不能为空且长度不超过100字符'),
         body('description').optional().isString().withMessage('描述必须是字符串'),
@@ -334,8 +336,8 @@ router.post('/vpps',
  * PUT /api/v1/vpp/vpps/:id/resources
  */
 router.put('/vpps/:id/resources',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         param('id').isInt().withMessage('VPP ID必须是整数'),
         body('add_resources').optional().isArray().withMessage('添加资源列表必须是数组'),
@@ -366,7 +368,7 @@ router.put('/vpps/:id/resources',
  * GET /api/v1/vpp/vpps/:id/aggregated-params
  */
 router.get('/vpps/:id/aggregated-params',
-    authenticateToken,
+    authenticate,
     [
         param('id').isInt().withMessage('VPP ID必须是整数')
     ],
@@ -394,7 +396,7 @@ router.get('/vpps/:id/aggregated-params',
  * GET /api/v1/vpp/statistics/templates
  */
 router.get('/statistics/templates',
-    authenticateToken,
+    authenticate,
     async (req, res) => {
         try {
             // 实现模板统计逻辑
@@ -422,7 +424,7 @@ router.get('/statistics/templates',
  * GET /api/v1/vpp/statistics/instances
  */
 router.get('/statistics/instances',
-    authenticateToken,
+    authenticate,
     async (req, res) => {
         try {
             // 实现实例统计逻辑
@@ -470,4 +472,4 @@ router.get('/health', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

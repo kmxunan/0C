@@ -1,9 +1,9 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier';
-import { modelQualityConfig } from './modelQualityConfig';
+import modelQualityConfig from './modelQualityConfig';
 
 /**
  * 3D模型优化器

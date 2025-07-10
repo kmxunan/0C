@@ -4,8 +4,8 @@
  * 用于验证JWT令牌和用户身份
  */
 
-const jwt = require('jsonwebtoken');
-const responseFormatter = require('./responseFormatter');
+import jwt from 'jsonwebtoken';
+import responseFormatter from './responseFormatter.js';
 
 // JWT配置
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -381,7 +381,7 @@ function userRateLimit(maxRequests = 100, windowMs = 15 * 60 * 1000) {
   };
 }
 
-module.exports = {
+export {
   authenticate,
   optionalAuthenticate,
   refreshToken,
@@ -396,3 +396,5 @@ module.exports = {
   isTokenBlacklisted,
   extractToken
 };
+
+export default authenticate;

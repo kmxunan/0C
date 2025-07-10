@@ -12,15 +12,8 @@ import {
   getRecommendedLODLevel
 } from '../../../config/modelQualityConfig';
 
-// 尝试导入性能优化器，如果不存在则使用降级处理
-let usePerformanceOptimizer = null;
-try {
-  const PerformanceOptimizer = require('./PerformanceOptimizer');
-  usePerformanceOptimizer = PerformanceOptimizer.usePerformanceOptimizer;
-} catch (e) {
-  // 性能优化器不可用时的降级处理
-  console.warn('PerformanceOptimizer not available, using fallback');
-}
+// 性能优化器降级处理
+const usePerformanceOptimizer = null;
 
 /**
  * 高级模型质量管理器

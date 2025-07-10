@@ -332,5 +332,5 @@ const responseFormatterMiddleware = (req, res, next) => {
   next();
 };
 
-module.exports = ResponseFormatter;
-module.exports.middleware = responseFormatterMiddleware;
+export default ResponseFormatter;
+export { responseFormatterMiddleware as middleware };

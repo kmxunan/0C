@@ -5,12 +5,14 @@
  * 创建时间: 2025年1月
  */
 
-const express = require('express');
+import express from 'express';
+import { authenticate } from '../interfaces/http/middleware/authMiddleware.js';
+import { requireRole } from '../interfaces/http/middleware/roleCheck.js';
+import { validateRequest } from '../interfaces/http/middleware/validation.js';
+import { body, param, query } from 'express-validator';
+import logger from '../utils/logger.js';
+
 const router = express.Router();
-const { authenticateToken, authorizeRole } = require('../middleware/auth');
-const { validateRequest } = require('../middleware/validation');
-const { body, param, query } = require('express-validator');
-const logger = require('../utils/logger');
 
 /**
  * ==================== 交易策略管理接口 ====================
@@ -21,7 +23,7 @@ const logger = require('../utils/logger');
  * GET /api/v1/vpp/trading/strategies
  */
 router.get('/strategies',
-    authenticateToken,
+    authenticate,
     [
         query('vpp_id').optional().isInt().withMessage('VPP ID必须是整数'),
         query('strategy_type').optional().isIn(['rule_based', 'ai_driven', 'hybrid']).withMessage('策略类型无效'),
@@ -60,8 +62,8 @@ router.get('/strategies',
  * POST /api/v1/vpp/trading/strategies
  */
 router.post('/strategies',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         body('name').notEmpty().isLength({ max: 100 }).withMessage('策略名称不能为空且长度不超过100字符'),
         body('description').optional().isString().withMessage('描述必须是字符串'),
@@ -104,8 +106,8 @@ router.post('/strategies',
  * PUT /api/v1/vpp/trading/strategies/:id
  */
 router.put('/strategies/:id',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         param('id').isInt().withMessage('策略ID必须是整数'),
         body('name').optional().isLength({ max: 100 }).withMessage('策略名称长度不超过100字符'),
@@ -145,8 +147,8 @@ router.put('/strategies/:id',
  * DELETE /api/v1/vpp/trading/strategies/:id
  */
 router.delete('/strategies/:id',
-    authenticateToken,
-    authorizeRole(['admin']),
+    authenticate,
+    requireRole(['admin']),
     [
         param('id').isInt().withMessage('策略ID必须是整数')
     ],
@@ -179,8 +181,8 @@ router.delete('/strategies/:id',
  * POST /api/v1/vpp/trading/strategies/:id/backtest
  */
 router.post('/strategies/:id/backtest',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         param('id').isInt().withMessage('策略ID必须是整数'),
         body('start_date').isISO8601().withMessage('开始日期格式无效'),
@@ -223,7 +225,7 @@ router.post('/strategies/:id/backtest',
  * GET /api/v1/vpp/trading/backtest/:taskId/results
  */
 router.get('/backtest/:taskId/results',
-    authenticateToken,
+    authenticate,
     [
         param('taskId').isInt().withMessage('任务ID必须是整数')
     ],
@@ -267,7 +269,7 @@ router.get('/backtest/:taskId/results',
  * GET /api/v1/vpp/trading/backtest/tasks
  */
 router.get('/backtest/tasks',
-    authenticateToken,
+    authenticate,
     [
         query('strategy_id').optional().isInt().withMessage('策略ID必须是整数'),
         query('status').optional().isIn(['pending', 'running', 'completed', 'failed', 'cancelled']).withMessage('状态值无效'),
@@ -309,7 +311,7 @@ router.get('/backtest/tasks',
  * GET /api/v1/vpp/trading/ai-models
  */
 router.get('/ai-models',
-    authenticateToken,
+    authenticate,
     [
         query('model_type').optional().isIn(['price_prediction', 'demand_forecast', 'risk_assessment', 'optimization']).withMessage('模型类型无效'),
         query('status').optional().isIn(['active', 'inactive', 'training', 'deprecated']).withMessage('状态值无效'),
@@ -347,8 +349,8 @@ router.get('/ai-models',
  * POST /api/v1/vpp/trading/ai-models
  */
 router.post('/ai-models',
-    authenticateToken,
-    authorizeRole(['admin', 'data_scientist']),
+    authenticate,
+    requireRole(['admin', 'data_scientist']),
     [
         body('name').notEmpty().isLength({ max: 100 }).withMessage('模型名称不能为空且长度不超过100字符'),
         body('description').optional().isString().withMessage('描述必须是字符串'),
@@ -391,7 +393,7 @@ router.post('/ai-models',
  * POST /api/v1/vpp/trading/ai-models/:id/predict
  */
 router.post('/ai-models/:id/predict',
-    authenticateToken,
+    authenticate,
     [
         param('id').isInt().withMessage('模型ID必须是整数'),
         body('input_data').isObject().withMessage('输入数据必须是对象'),
@@ -429,7 +431,7 @@ router.post('/ai-models/:id/predict',
  * GET /api/v1/vpp/trading/market-connectors
  */
 router.get('/market-connectors',
-    authenticateToken,
+    authenticate,
     [
         query('market_name').optional().isString().withMessage('市场名称必须是字符串'),
         query('status').optional().isIn(['active', 'inactive', 'error', 'maintenance']).withMessage('状态值无效')
@@ -472,8 +474,8 @@ router.get('/market-connectors',
  * POST /api/v1/vpp/trading/market-connectors
  */
 router.post('/market-connectors',
-    authenticateToken,
-    authorizeRole(['admin']),
+    authenticate,
+    requireRole(['admin']),
     [
         body('market_name').notEmpty().isString().withMessage('市场名称不能为空'),
         body('market_type').isIn(['day_ahead', 'intraday', 'balancing', 'ancillary']).withMessage('市场类型无效'),
@@ -514,7 +516,7 @@ router.post('/market-connectors',
  * GET /api/v1/vpp/trading/market-data/:connectorId
  */
 router.get('/market-data/:connectorId',
-    authenticateToken,
+    authenticate,
     [
         param('connectorId').isInt().withMessage('连接器ID必须是整数'),
         query('data_type').optional().isIn(['price', 'volume', 'demand', 'supply']).withMessage('数据类型无效'),
@@ -559,8 +561,8 @@ router.get('/market-data/:connectorId',
  * POST /api/v1/vpp/trading/bids
  */
 router.post('/bids',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         body('vpp_id').isInt().withMessage('VPP ID必须是整数'),
         body('strategy_id').isInt().withMessage('策略ID必须是整数'),
@@ -605,7 +607,7 @@ router.post('/bids',
  * GET /api/v1/vpp/trading/bids/:bidId/results
  */
 router.get('/bids/:bidId/results',
-    authenticateToken,
+    authenticate,
     [
         param('bidId').isInt().withMessage('投标ID必须是整数')
     ],
@@ -640,8 +642,8 @@ router.get('/bids/:bidId/results',
  * POST /api/v1/vpp/trading/dispatch
  */
 router.post('/dispatch',
-    authenticateToken,
-    authorizeRole(['admin', 'operator']),
+    authenticate,
+    requireRole(['admin', 'operator']),
     [
         body('vpp_id').isInt().withMessage('VPP ID必须是整数'),
         body('instruction_type').isIn(['increase_output', 'decrease_output', 'start', 'stop', 'standby']).withMessage('指令类型无效'),
@@ -683,7 +685,7 @@ router.post('/dispatch',
  * GET /api/v1/vpp/trading/dispatch/:instructionId/status
  */
 router.get('/dispatch/:instructionId/status',
-    authenticateToken,
+    authenticate,
     [
         param('instructionId').isInt().withMessage('指令ID必须是整数')
     ],
@@ -731,7 +733,7 @@ router.get('/dispatch/:instructionId/status',
  * GET /api/v1/vpp/trading/reports/operation
  */
 router.get('/reports/operation',
-    authenticateToken,
+    authenticate,
     [
         query('vpp_id').optional().isInt().withMessage('VPP ID必须是整数'),
         query('start_date').isISO8601().withMessage('开始日期格式无效'),
@@ -780,7 +782,7 @@ router.get('/reports/operation',
  * GET /api/v1/vpp/trading/reports/strategy-performance
  */
 router.get('/reports/strategy-performance',
-    authenticateToken,
+    authenticate,
     [
         query('strategy_id').optional().isInt().withMessage('策略ID必须是整数'),
         query('start_date').isISO8601().withMessage('开始日期格式无效'),
@@ -825,7 +827,7 @@ router.get('/reports/strategy-performance',
  * GET /api/v1/vpp/trading/reports/revenue-analysis
  */
 router.get('/reports/revenue-analysis',
-    authenticateToken,
+    authenticate,
     [
         query('vpp_id').optional().isInt().withMessage('VPP ID必须是整数'),
         query('start_date').isISO8601().withMessage('开始日期格式无效'),
@@ -890,4 +892,4 @@ router.get('/health', async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

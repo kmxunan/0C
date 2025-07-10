@@ -1,8 +1,8 @@
 import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text, Html } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import { useSpring, animated } from '@react-spring/three';
-import * as THREE from 'three';
+
 import { useDigitalTwinStore } from '../../../stores/digitalTwinStore';
 import ModelLoader from './ModelLoader';
 import { usePerformanceOptimizer } from '../utils/PerformanceOptimizer';
@@ -20,7 +20,6 @@ const BuildingModel = ({ building, isSelected, settings = {} }) => {
   const [hovered, setHovered] = useState(false);
   const [modelLoaded, setModelLoaded] = useState(false);
   const [modelError, setModelError] = useState(false);
-  const [currentLOD, setCurrentLOD] = useState(0);
   const [performanceMode, setPerformanceMode] = useState(false);
   const { setSelectedBuilding } = useDigitalTwinStore();
   const { camera } = useThree();
@@ -30,7 +29,7 @@ const BuildingModel = ({ building, isSelected, settings = {} }) => {
   const { currentLOD, updateLOD } = useLODObject(`building-${building.id}`, null, {
     onLODChange: (newLOD, oldLOD) => {
       console.log(`建筑 ${building.name} LOD变化: ${oldLOD?.name} -> ${newLOD?.name}`);
-      if (handleLODChange) handleLODChange(newLOD.level, 0);
+      handleLODChangeCallback(newLOD.level, 0);
     }
   });
 
@@ -143,8 +142,7 @@ const BuildingModel = ({ building, isSelected, settings = {} }) => {
   };
 
   // LOD变化回调
-  const handleLODChange = (newLOD, distance) => {
-    setCurrentLOD(newLOD);
+  const handleLODChangeCallback = (newLOD, distance) => {
     if (performanceOptimizer) {
       performanceOptimizer.updateModelMetrics(building.id, {
         currentLOD: newLOD,
@@ -265,7 +263,7 @@ const BuildingModel = ({ building, isSelected, settings = {} }) => {
             performanceMode={performanceMode}
             onLoad={handleModelLoad}
             onError={handleModelError}
-            onLODChange={handleLODChange}
+            onLODChange={handleLODChangeCallback}
             fallbackGeometry={getFallbackGeometry()}
             qualityLevel={currentLOD?.name || 'medium'}
             enableOptimization={true}

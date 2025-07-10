@@ -5,7 +5,7 @@ import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
 import * as THREE from 'three';
 // import { useModelQuality } from '../utils/ModelQualityManager';
 // import { usePerformanceOptimizer } from '../utils/PerformanceOptimizer';
-import { modelQualityConfig } from '../utils/modelQualityConfig';
+import modelQualityConfig from '../utils/modelQualityConfig';
 import { useModelOptimizer } from '../utils/ModelOptimizer';
 
 /**

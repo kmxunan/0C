@@ -7,14 +7,14 @@ import express from 'express';
 import vppTradingStrategyEditorService from '../services/VPPTradingStrategyEditorService.js';
 import { STRATEGY_TYPE, CONDITION_TYPE, ACTION_TYPE, OPERATOR, STRATEGY_STATUS } from '../services/VPPTradingStrategyEditorService.js';
 import logger from '../shared/utils/logger.js';
-import { authenticateToken } from '../interfaces/http/middleware/authMiddleware.js';
+import { authenticate } from '../interfaces/http/middleware/authMiddleware.js';
 import { validateRequest } from '../interfaces/http/middleware/validation.js';
 import { body, param, query } from 'express-validator';
 
 const router = express.Router();
 
 // 应用认证中间件
-router.use(authenticateToken);
+router.use(authenticate);
 
 /**
  * @swagger

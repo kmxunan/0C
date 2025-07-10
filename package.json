@@ -90,10 +90,12 @@
   },
   "dependencies": {
     "@chainlink/contracts": "^0.6.1",
+    "@mui/x-date-pickers": "^8.7.0",
     "@openzeppelin/contracts": "^4.9.2",
     "@react-spring/three": "^10.0.1",
     "@tensorflow/tfjs": "^4.22.0",
     "@tensorflow/tfjs-node": "^4.22.0",
+    "axios": "^1.10.0",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "date-fns": "^4.1.0",

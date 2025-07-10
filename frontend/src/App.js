@@ -22,6 +22,13 @@ const PWAStatus = React.lazy(() => import('./components/PWAStatus'));
 const SystemReports = React.lazy(() => import('./components/SystemReports'));
 const SystemSettings = React.lazy(() => import('./components/SystemSettings'));
 const HelpCenter = React.lazy(() => import('./components/HelpCenter'));
+// VPP 组件懒加载
+const TradingStrategyEditor = React.lazy(() => import('./components/VPP/TradingStrategyEditor'));
+const BacktestResultsViewer = React.lazy(() => import('./components/VPP/BacktestResultsViewer'));
+const ResourceAggregationManager = React.lazy(() => import('./components/VPP/ResourceAggregationManager'));
+const MarketConnectorDashboard = React.lazy(() => import('./components/VPP/MarketConnectorDashboard'));
+const RealTimeMonitoringDashboard = React.lazy(() => import('./components/VPP/RealTimeMonitoringDashboard'));
+const PerformanceAnalytics = React.lazy(() => import('./components/VPP/PerformanceAnalytics'));
 // 路由懒加载组件
 
 // 获取移动端优化主题
@@ -114,6 +121,37 @@ function App() {
             <Route path="/help" element={
               <React.Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>加载中...</Box>}>
                 <HelpCenter />
+              </React.Suspense>
+            } />
+            {/* VPP 路由 */}
+            <Route path="/vpp/trading-strategy" element={
+              <React.Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>加载中...</Box>}>
+                <TradingStrategyEditor />
+              </React.Suspense>
+            } />
+            <Route path="/vpp/backtest-results" element={
+              <React.Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>加载中...</Box>}>
+                <BacktestResultsViewer />
+              </React.Suspense>
+            } />
+            <Route path="/vpp/resource-aggregation" element={
+              <React.Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>加载中...</Box>}>
+                <ResourceAggregationManager />
+              </React.Suspense>
+            } />
+            <Route path="/vpp/market-connector" element={
+              <React.Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>加载中...</Box>}>
+                <MarketConnectorDashboard />
+              </React.Suspense>
+            } />
+            <Route path="/vpp/monitoring" element={
+              <React.Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>加载中...</Box>}>
+                <RealTimeMonitoringDashboard />
+              </React.Suspense>
+            } />
+            <Route path="/vpp/performance" element={
+              <React.Suspense fallback={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>加载中...</Box>}>
+                <PerformanceAnalytics />
               </React.Suspense>
             } />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

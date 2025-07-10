@@ -37,9 +37,14 @@ import {
   Help,
   ElectricBolt,
   Co2,
-  TrendingUp,
   PhoneAndroid,
-  ThreeDRotation
+  ThreeDRotation,
+  TrendingUp as TradingIcon,
+  Assessment as BacktestIcon,
+  Hub as AggregationIcon,
+  Link as ConnectorIcon,
+  MonitorHeart as MonitoringIcon,
+  BarChart as PerformanceIcon
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 
@@ -100,6 +105,36 @@ const Layout = () => {
       text: '数字孪生可视化',
       icon: <ThreeDRotation />,
       path: '/digital-twin'
+    },
+    {
+      text: 'VPP交易策略',
+      icon: <TradingIcon />,
+      path: '/vpp/trading-strategy'
+    },
+    {
+      text: 'VPP回测结果',
+      icon: <BacktestIcon />,
+      path: '/vpp/backtest-results'
+    },
+    {
+      text: 'VPP资源聚合',
+      icon: <AggregationIcon />,
+      path: '/vpp/resource-aggregation'
+    },
+    {
+      text: 'VPP市场连接',
+      icon: <ConnectorIcon />,
+      path: '/vpp/market-connector'
+    },
+    {
+      text: 'VPP实时监控',
+      icon: <MonitoringIcon />,
+      path: '/vpp/monitoring'
+    },
+    {
+      text: 'VPP性能分析',
+      icon: <PerformanceIcon />,
+      path: '/vpp/performance'
     },
     {
       text: 'PWA状态',

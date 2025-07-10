@@ -4,7 +4,7 @@
  * 提供统一的错误响应格式和错误分类
  */
 
-import { logger } from '../utils/logger.js';
+import logger from '../utils/logger.js';
 
 // 错误类型枚举
 export const ErrorTypes = {

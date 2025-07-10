@@ -4,7 +4,6 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import crypto from 'crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,13 +76,7 @@ class MigrationManager {
    * 创建默认配置
    */
 
-  // TODO: 考虑将此函数拆分为更小的函数 (当前 85 行)
 
-  // TODO: 考虑将此函数拆分为更小的函数 (当前 85 行)
-
-  // TODO: 考虑将此函数拆分为更小的函数 (当前 85 行)
-
-  // TODO: 考虑将此函数拆分为更小的函数 (当前 85 行)
 
   async createDefaultConfig(configPath) {
     const defaultConfig = `export default {
@@ -202,14 +195,6 @@ class MigrationManager {
 
     console.log('✅ 数据库连接成功');
   }
-
-  // TODO: 考虑将此函数拆分为更小的函数 (当前 25 行)
-
-  // TODO: 考虑将此函数拆分为更小的函数 (当前 25 行)
-
-  // TODO: 考虑将此函数拆分为更小的函数 (当前 25 行)
-
-  // TODO: 考虑将此函数拆分为更小的函数 (当前 25 行)
 
   /**
    * 创建迁移表
@@ -784,7 +769,7 @@ class MockDatabase {
     console.log(`   删除表: ${tableName}`);
   }
 
-  async alterTable(tableName, changes) {
+  async alterTable(tableName, _changes) {
     console.log(`   修改表: ${tableName}`);
   }
 
@@ -868,94 +853,85 @@ class MockDatabase {
   }
 }
 
-// 命令行接口
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const args = process.argv.slice(2);
-  const command = args[0];
-
+// 主函数
+async function main() {
+  const [command, ...args] = process.argv.slice(2);
   const manager = new MigrationManager();
 
-  async function main() {
-    try {
-      await manager.initialize();
+  try {
+    await manager.initialize();
 
-      switch (command) {
-        case 'create':
-          {
-            const name = args[1];
-          if (!name) {
-            console.error(
-              '请指定迁移名称: create <name> [--table=table_name] [--action=create|alter]'
-            );
-            process.exit(1);
+    switch (command) {
+      case 'create': {
+        const name = args[0];
+        if (!name) {
+          console.error(
+            '请指定迁移名称: create <name> [--table=table_name] [--action=create|alter]'
+          );
+          process.exit(1);
+        }
+
+        const options = {};
+        args.slice(1).forEach((arg) => {
+          if (arg.startsWith('--table=')) {
+            const tableParts = arg.split('=');
+            options.table = tableParts[1];
           }
-
-          const options = {};
-          args.slice(2).forEach((arg) => {
-            if (arg.startsWith('--table=')) {
-              options.table = arg.split('=')[1];
-            }
-            if (arg.startsWith('--action=')) {
-              options.action = arg.split('=')[1];
-            }
-          });
-
-          await manager.createMigration(name, options);
-            break;
-
+          if (arg.startsWith('--action=')) {
+            const actionParts = arg.split('=');
+            options.action = actionParts[1];
           }
+        });
 
-        case 'migrate':
-        case 'up':
-          {
-            const migrateOptions = {};
-          if (args.includes('--step')) {
-            const stepIndex = args.indexOf('--step');
-            migrateOptions.step = parseInt(args[stepIndex + 1]) || 1;
-          }
-          await manager.migrate(migrateOptions);
-            break;
+        await manager.createMigration(name, options);
+        break;
+      }
 
-          }
+      case 'migrate':
+      case 'up': {
+        const migrateOptions = {};
+        if (args.includes('--step')) {
+          const stepIndex = args.indexOf('--step');
+          const stepValue = args[stepIndex + 1];
+          migrateOptions.step = parseInt(stepValue) || 1;
+        }
+        await manager.migrate(migrateOptions);
+        break;
+      }
 
-        case 'rollback':
-        case 'down':
-          {
-            const rollbackOptions = {};
-          if (args.includes('--step')) {
-            const stepIndex = args.indexOf('--step');
-            rollbackOptions.step = parseInt(args[stepIndex + 1]) || 1;
-          }
-          await manager.rollback(rollbackOptions);
-            break;
+      case 'rollback':
+      case 'down': {
+        const rollbackOptions = {};
+        if (args.includes('--step')) {
+          const stepIndex = args.indexOf('--step');
+          const stepValue = args[stepIndex + 1];
+          rollbackOptions.step = parseInt(stepValue) || 1;
+        }
+        await manager.rollback(rollbackOptions);
+        break;
+      }
 
-          }
+      case 'status': {
+        await manager.status();
+        break;
+      }
 
-        case 'status':
-          await manager.status();
-            break;
+      case 'seed': {
+        const seedOptions = {};
+        if (args[0]) {
+          seedOptions.specific = args[0];
+        }
+        await manager.seed(seedOptions);
+        break;
+      }
 
-          }
+      case 'reset': {
+        await manager.reset();
+        break;
+      }
 
-        case 'seed':
-          {
-            const seedOptions = {};
-          if (args[1]) {
-            seedOptions.specific = args[1];
-          }
-          await manager.seed(seedOptions);
-            break;
-
-          }
-
-        case 'reset':
-          await manager.reset();
-            break;
-
-          }
-
-        default:
-          console.log(`
+      default:
+        console.log(`
 使用方法:
   node migration-manager.js create <name> [--table=table_name] [--action=create|alter]
   node migration-manager.js migrate [--step=n]
@@ -964,15 +940,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   node migration-manager.js seed [seed_name]
   node migration-manager.js reset
 `);
-      }
-    } catch (error) {
-      console.error(`\n❌ 操作失败: ${error.message}`);
-      process.exit(1);
-    } finally {
-      await manager.cleanup();
     }
+  } catch (error) {
+    console.error(`\n❌ 操作失败: ${error.message}`);
+    process.exit(1);
+  } finally {
+    await manager.cleanup();
   }
+}
 
+// 命令行接口
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 

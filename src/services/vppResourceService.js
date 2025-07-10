@@ -5,9 +5,9 @@
  * 创建时间: 2025年1月
  */
 
-const db = require('../config/database');
-const { v4: uuidv4 } = require('uuid');
-const logger = require('../utils/logger');
+import db from '../config/database.js';
+import { v4 as uuidv4 } from 'uuid';
+import logger from '../utils/logger.js';
 
 class VPPResourceService {
     /**
@@ -609,4 +609,4 @@ class VPPResourceService {
     }
 }
 
-module.exports = new VPPResourceService();
+export default new VPPResourceService();

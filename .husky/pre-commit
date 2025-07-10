@@ -28,8 +28,7 @@ if [ -n "$STAGED_FILES" ]; then
     
     # 检查是否包含敏感信息
     for file in $STAGED_FILES; do
-        if git show ":$file" | grep -iE '(password|secret|key|token)\s*=\s*["\'][^"\'
-]{8,}["\']' > /dev/null; then
+        if git show ":$file" | grep -iE '(password|secret|key|token)\s*=\s*["'"'"'][^"'"'"']{8,}["'"'"']' > /dev/null; then
             echo -e "${RED}⚠️  警告: $file 可能包含硬编码的敏感信息${NC}"
             SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
         fi
