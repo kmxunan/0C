@@ -1,1 +1,0 @@
-This is a placeholder for building_lod1.glb. Please replace this with your actual low-detail GLTF model.
